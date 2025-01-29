@@ -175,7 +175,6 @@
             "upgradeInsecureRequests": null
         }
       },
-      "allowWildcard": false,
       "useNonce": true
     }
 }
