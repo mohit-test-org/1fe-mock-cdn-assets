@@ -135,7 +135,18 @@
                         "route": "/app2"
                     },
                     "version": "1.0.5"
-                }
+                },
+                {
+                  "widgetId": "@1ds/authed-widget",
+                  "plugin": {
+                      "enabled": true,
+                      "route": "/authed-widget",
+                      "auth": {
+                          "authenticationType": "required"
+                      }
+                  },
+                  "version": "1.0.0"
+              }
             ]
         }
     },
