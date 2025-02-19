@@ -126,7 +126,7 @@
                         "enabled": true,
                         "route": "/app1"
                     },
-                    "version": "1.0.0"
+                    "version": "1.0.1"
                 },
                 {
                     "widgetId": "@1ds/starter-kit2",
