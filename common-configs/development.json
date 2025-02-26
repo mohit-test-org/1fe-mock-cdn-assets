@@ -151,41 +151,5 @@
         }
     },
     "csp": {
-      "defaultCSP": {
-        "enforced": {
-          "scriptSrc": [
-                "'unsafe-eval'",
-                "'unsafe-inline'",
-                "'wasm-unsafe-eval'",
-                "*"
-            ],
-            "scriptSrcAttr": [
-                "'unsafe-eval'",
-                "'unsafe-inline'",
-                "'wasm-unsafe-eval'"
-            ],
-            "styleSrc": [
-              "'unsafe-inline'"
-            ]
-        },
-        "reportOnly": {
-          "scriptSrc": [
-                "'unsafe-eval'",
-                "'unsafe-inline'",
-                "'wasm-unsafe-eval'",
-                "*"
-            ],
-            "scriptSrcAttr": [
-                "'unsafe-eval'",
-                "'unsafe-inline'",
-                "'wasm-unsafe-eval'"
-            ],
-            "styleSrc": [
-              "'unsafe-inline'"
-            ],
-            "upgradeInsecureRequests": null
-        }
-      },
-      "useNonce": true
     }
 }
