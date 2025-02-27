@@ -150,6 +150,16 @@
             ]
         }
     },
+    "importMapOverrides": {
+        "enableUI": true,
+        "allowedSources": [
+          "localhost",
+          "127.0.0.1",
+          "docucdn-a.akamaihd.net",
+          "docutest-a.akamaihd.net",
+          "cdn.jsdelivr.net"
+        ]
+    },
     "csp": {
     }
 }
