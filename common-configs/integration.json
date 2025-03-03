@@ -122,6 +122,7 @@
             "releaseConfig": [
                 {
                     "widgetId": "@1ds/bathtub",
+                    "type": "system",
                     "plugin": {
                         "enabled": true,
                         "route": "/bathtub"
