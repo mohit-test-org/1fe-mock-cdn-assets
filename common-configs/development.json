@@ -160,7 +160,7 @@
         }
     },
     "importMapOverrides": {
-        "enableUI": false,
+        "enableUI": true,
         "allowedSources": [
           "localhost",
           "127.0.0.1",
