@@ -14,6 +14,7 @@ jobs:
 
       - name: Install Akamai CLI and NetStorage Module
         run: |
+          set -e
           curl -sL https://github.com/akamai/cli/releases/download/v2.0.0/akamai-v2.0.0-linuxamd64 -o akamai
           chmod +x akamai
           sudo mv akamai /usr/local/bin/
@@ -22,10 +23,11 @@ jobs:
 
       - name: Upload file to Akamai NetStorage
         run: |
+          set -e
           echo "[default]
           host = ${{ secrets.CDN_1FE_AKAMAI_HOST }}
           key = ${{ secrets.CDN_1FE_AKAMAI_SECRET }}
-          cpcode = ${{ secrets.CDN_1FE_AKAMAI_CP_CODE }}" > ~/.akamai-cli/.netstorage
+          cpcode = ${{ secrets.CDN_1FE_AKAMAI_CP_CODE }}" > ~/.edgerc
 
           akamai netstorage upload /common-configs/integration.json /integration/configs/live.json
           akamai netstorage upload /common-configs/stage.json /stage/configs/live.json
@@ -34,4 +36,5 @@ jobs:
 
       - name: Purge assets to reset cache
         run: |
-          akamai purge invalidate --hostname ${{ secrets.CDN_1FE_AKAMAI_HOST }} --objects "/integration/configs/live.json" "/stage/configs/live.json" "/demo/configs/live.json" "/production/configs/live.json"
+          set -e
+          akamai purge invalidate https://1fe-a.akamaihd.net/integration/configs/live.json https://1fe-a.akamaihd.net/stage/configs/live.json https://1fe-a.akamaihd.net/demo/configs/live.json https://1fe-a.akamaihd.net/production/configs/live.json
