@@ -14,7 +14,7 @@ jobs:
 
       - name: Install Akamai CLI and NetStorage Module
         run: |
-          curl -sL https://github.com/akamai/cli/releases/latest/download/akamai-linux-amd64 -o akamai
+          curl -sL https://github.com/akamai/cli/releases/download/v2.0.0/akamai-v2.0.0-linuxamd64 -o akamai
           chmod +x akamai
           sudo mv akamai /usr/local/bin/
           akamai install netstorage
