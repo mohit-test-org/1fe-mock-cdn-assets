@@ -27,7 +27,7 @@ jobs:
           echo "[default]
           host = ${{ secrets.CDN_1FE_AKAMAI_HOST }}
           key = ${{ secrets.CDN_1FE_AKAMAI_SECRET }}
-          cpcode = ${{ secrets.CDN_1FE_AKAMAI_CP_CODE }}" > ~/.edgerc
+          cpcode = ${{ secrets.CDN_1FE_AKAMAI_CP_CODE }}" > ~/.akamai-cli/.netstorage/auth
 
           akamai netstorage upload /common-configs/integration.json /integration/configs/live.json
           akamai netstorage upload /common-configs/stage.json /stage/configs/live.json
