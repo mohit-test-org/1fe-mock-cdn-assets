@@ -24,6 +24,7 @@ jobs:
       - name: Upload file to Akamai NetStorage
         run: |
           set -e
+          mkdir -p ~/.akamai-cli/.netstorage
           echo "[default]
           host = ${{ secrets.CDN_1FE_AKAMAI_HOST }}
           key = ${{ secrets.CDN_1FE_AKAMAI_SECRET }}
