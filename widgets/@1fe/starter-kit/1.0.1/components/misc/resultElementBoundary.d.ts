@@ -2,4 +2,3 @@ export declare const ResultElementBoundary: import("@emotion/styled").StyledComp
     theme?: import("@emotion/react").Theme;
     as?: React.ElementType;
 }, import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLPreElement>, HTMLPreElement>, {}>;
-export default ResultElementBoundary;

@@ -1,8 +1,12 @@
 import { PlatformPropsType } from '@devhub/1fe-shell';
+import { default as React_2 } from 'react';
 
-export declare type HostPropsContract = {};
+declare const _default: (props: WidgetProps) => React_2.ReactElement;
+export default _default;
 
-export declare type RootProps = {
+declare type HostPropsContract = {};
+
+declare type WidgetProps = {
     host: HostPropsContract;
     platform: PlatformPropsType;
 };
