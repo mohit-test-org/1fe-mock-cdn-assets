@@ -1,2 +1,1 @@
-declare const UtilsDemo: (props: any) => import("@emotion/react/jsx-runtime").JSX.Element;
-export default UtilsDemo;
+export declare const UtilsDemo: () => import("@emotion/react/jsx-runtime").JSX.Element;

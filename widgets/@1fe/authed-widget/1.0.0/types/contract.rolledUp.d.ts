@@ -1,10 +1,15 @@
+import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { PlatformPropsType } from '@devhub/1fe-shell';
 
-export declare type HostPropsContract = {};
+declare interface HostPropsContract {
+}
 
-export declare type RootProps = {
-    host: HostPropsContract;
+declare function Root(props: WidgetProps): JSX_2.Element;
+export default Root;
+
+declare type WidgetProps = {
     platform: PlatformPropsType;
+    host?: HostPropsContract;
 };
 
 export { }

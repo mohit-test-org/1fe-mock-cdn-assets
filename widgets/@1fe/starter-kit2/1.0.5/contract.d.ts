@@ -5,7 +5,7 @@ export type WidgetEvents = {
         param1: string;
     };
 };
-export type RootProps = {
+export type WidgetProps = {
     host: HostPropsContract;
     platform: PlatformPropsType;
 };

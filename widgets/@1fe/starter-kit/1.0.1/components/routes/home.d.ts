@@ -1,3 +1,3 @@
 import React from 'react';
-declare const Home: React.FC;
-export default Home;
+import { WidgetProps } from '../../contract';
+export declare const Home: React.FC<WidgetProps>;

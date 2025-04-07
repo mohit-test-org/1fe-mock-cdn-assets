@@ -1,16 +1,14 @@
+import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { PlatformPropsType } from '@devhub/1fe-shell';
 
-export declare type HostPropsContract = {};
+declare type HostPropsContract = {};
 
-export declare type RootProps = {
+declare function Root(props: WidgetProps): JSX_2.Element;
+export default Root;
+
+declare type WidgetProps = {
     host: HostPropsContract;
     platform: PlatformPropsType;
-};
-
-export declare type WidgetEvents = {
-    event1: {
-        param1: string;
-    };
 };
 
 export { }
