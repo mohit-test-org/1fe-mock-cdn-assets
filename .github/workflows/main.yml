@@ -1,45 +1,42 @@
-name: Upload to CDN
+name: Upload Files and Purge Akamai Cache
 
 on:
   push:
     branches:
-      - main
+      - main  # Trigger on push to the main branch
 
 jobs:
-  upload:
+  upload-and-purge:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Install Akamai CLI and NetStorage Module
+      - name: Set up SSH
         run: |
-          set -e
-          curl -sL https://github.com/akamai/cli/releases/download/v2.0.0/akamai-v2.0.0-linuxamd64 -o akamai
-          chmod +x akamai
-          sudo mv akamai /usr/local/bin/
-          akamai install netstorage
-          akamai install purge
+          mkdir -p ~/.ssh
+          echo "${{ secrets.CDN_1FE_AKAMAI_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.CDN_1FE_AKAMAI_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Upload file to Akamai NetStorage
+      - name: Upload files to respective destinations
         run: |
-          set -e
-          mkdir -p ~/.akamai-cli/.netstorage
-          echo "[default]
-          host = ${{ secrets.CDN_1FE_AKAMAI_HOST }}
-          key = ${{ secrets.CDN_1FE_AKAMAI_SECRET }}
-          cpcode = ${{ secrets.CDN_1FE_AKAMAI_CP_CODE }}" > ~/.akamai-cli/.netstorage/auth
+          # Define the mapping of files to destinations
+          declare -A FILE_DESTINATIONS=(
+            ["common-configs/integration.json"]="/integration/configs/live.json"
+            ["common-configs/stage.json"]="/stage/configs/live.json"
+            ["common-configs/demo.json"]="/demo/configs/live.json"
+            ["common-configs/production.json"]="/production/configs/live.json"
+          )
 
-          akamai netstorage upload common-configs/integration.json /integration/configs/live.json
-          akamai netstorage upload common-configs/stage.json /stage/configs/live.json
-          akamai netstorage upload common-configs/demo.json /demo/configs/live.json
-          akamai netstorage upload common-configs/production.json /production/configs/live.json
+          # Upload each file to its respective destination
+          for FILE in "${!FILE_DESTINATIONS[@]}"; do
+            DESTINATION=${FILE_DESTINATIONS[$FILE]}
+            echo "Uploading $FILE to $DESTINATION"
+            scp "$FILE" "${{ secrets.CDN_1FE_AKAMAI_USERNAME }}@${{ secrets.CDN_1FE_AKAMAI_HOST }}:$DESTINATION"
+          done
 
-      - name: Purge assets to reset cache
-        run: |
-          set -e
-          echo "[default]
-          host = ${{ secrets.CDN_1FE_AKAMAI_HOST }}
-          key = ${{ secrets.CDN_1FE_AKAMAI_SECRET }}
-          cpcode = ${{ secrets.CDN_1FE_AKAMAI_CP_CODE }}" > ~/.edgerc
-          akamai purge invalidate https://1fe-a.akamaihd.net/integration/configs/live.json https://1fe-a.akamaihd.net/stage/configs/live.json https://1fe-a.akamaihd.net/demo/configs/live.json https://1fe-a.akamaihd.net/production/configs/live.json
+      
+            
+
