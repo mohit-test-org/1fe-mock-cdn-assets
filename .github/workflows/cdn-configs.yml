@@ -1,9 +1,11 @@
-name: Upload Files and Purge Akamai Cache
+name: Upload Config Files and Purge Akamai Cache
 
 on:
   push:
     branches:
       - main  # Trigger on push to the main branch
+    paths:
+      - common-configs/**
 
 jobs:
   upload-and-purge:
@@ -40,7 +42,7 @@ jobs:
             rm -rf $DESTINATION
             # Rename file to live.json
             mv $FILE $DESTINATION
-            scp "$FILE" "${{ secrets.CDN_1FE_AKAMAI_USERNAME }}@${{ secrets.CDN_1FE_AKAMAI_HOST }}:/$DESTINATION"
+            scp "$DESTINATION" "${{ secrets.CDN_1FE_AKAMAI_USERNAME }}@${{ secrets.CDN_1FE_AKAMAI_HOST }}:/$DESTINATION"
           done
 
       
