@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - main  # Trigger on push to the main branch
-    paths:
-      - common-configs/**
+    #paths:
+    #  - common-configs/**
 
 jobs:
   upload-and-purge:
