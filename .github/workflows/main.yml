@@ -34,6 +34,7 @@ jobs:
           for FILE in "${!FILE_DESTINATIONS[@]}"; do
             DESTINATION=${FILE_DESTINATIONS[$FILE]}
             echo "Uploading $FILE to $DESTINATION"
+            mv $FILE $DESTINATION
             scp "$FILE" "${{ secrets.CDN_1FE_AKAMAI_USERNAME }}@${{ secrets.CDN_1FE_AKAMAI_HOST }}:$DESTINATION"
           done
 
