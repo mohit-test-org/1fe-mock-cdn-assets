@@ -15,7 +15,7 @@
                   "id": "@optimizely/optimizely-sdk",
                   "name": "optimizelySdk",
                   "version": "4.9.2",
-                  "isPreloaded": true,
+                  "isPreloaded": true, 
                   "path": "dist/optimizely.browser.umd.js",
                   "type": "external"
                 },
