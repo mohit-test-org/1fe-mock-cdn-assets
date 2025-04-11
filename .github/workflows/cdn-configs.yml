@@ -33,7 +33,7 @@ jobs:
 
           set -e
           echo "[default]
-          key = nIvW65mhOjahvF8ee07IIwV20XUvDeCMA4NHps9JHl
+          key = ${{ secrets.AKAMAI_NS_UPLOAD_ACCOUNT_KEY }}
           id = 1fe
           group = 1FE
           host = 1fe-nsu.akamaihd.net
