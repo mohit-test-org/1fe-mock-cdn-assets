@@ -39,16 +39,18 @@ jobs:
           host = 1fe-nsu.akamaihd.net
           cpcode = 1800003" > ~/auth
 
-          akamai netstorage upload /common-configs/integration.json --directory integration/configs --config ~/auth
+      - name: Upload config files to NetStorage
+        run: |
+          pwd
+          akamai netstorage upload common-configs/integration.json --directory integration/configs --config ~/auth
           # akamai netstorage upload /common-configs/stage.json /stage/configs/live.json
           # akamai netstorage upload /common-configs/demo.json /demo/configs/live.json
           # akamai netstorage upload /common-configs/production.json /production/configs/live.json
-
+          
       - name: Purge assets to reset cache
         run: |
           set -e
-          # akamai purge invalidate https://1fe-a.akamaihd.net/integration/configs/live.json https://1fe-a.akamaihd.net/stage/configs/live.json https://1fe-a.akamaihd.net/demo/configs/live.json https://1fe-a.akamaihd.net/production/configs/live.json
-
+          akamai purge invalidate https://1fe-a.akamaihd.net/integration/configs/live.json
       
             
 
