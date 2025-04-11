@@ -41,15 +41,15 @@ jobs:
 
       - name: Upload config files to NetStorage
         run: |
-          akamai netstorage upload common-configs/integration.json --directory integration/configs --config ~/auth
-          # akamai netstorage upload /common-configs/stage.json /stage/configs/live.json
-          # akamai netstorage upload /common-configs/demo.json /demo/configs/live.json
-          # akamai netstorage upload /common-configs/production.json /production/configs/live.json
+          cp common-configs/integration.json live.json && akamai netstorage upload live.json --directory integration/configs && rm live.json
+          cp common-configs/stage.json live.json && akamai netstorage upload live.json --directory stage/configs && rm live.json
+          cp common-configs/demo.json live.json && akamai netstorage upload live.json --directory demo/configs && rm live.json
+          cp common-configs/production.json live.json && akamai netstorage upload live.json --directory production/configs && rm live.json
           
       - name: Purge assets to reset cache
         run: |
           set -e
-          akamai purge invalidate https://1fe-a.akamaihd.net/integration/configs/live.json
+          akamai purge invalidate https://1fe-a.akamaihd.net/integration/configs/live.json https://1fe-a.akamaihd.net/stage/configs/live.json https://1fe-a.akamaihd.net/demo/configs/live.json https://1fe-a.akamaihd.net/production/configs/live.json
       
             
 
