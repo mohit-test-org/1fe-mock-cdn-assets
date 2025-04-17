@@ -32,7 +32,7 @@
                   "name": "emotionReact",
                   "version": "11.10.6",
                   "isPreloaded": true,
-                  "path": "dist/emotion-react.umd.min.js",
+                  "path": "dist/emotion-react.umd.min.js ",
                   "type": "external"
                 },
                 {
