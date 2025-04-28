@@ -1,7 +1,7 @@
 {
     "cdn": {
         "libraries": {
-            "basePrefix": "https://cdn.jsdelivr.net/gh/docusign/mock-cdn-assets/libs/",
+            "basePrefix": "https://cdn.jsdelivr.net/gh/docusign/mock-cdn-assets/development/libs/",
             "managed": [
                 { "id": "@1fe/cli", "version": "1.13.4", "type": "installed" },
                 {
@@ -110,7 +110,7 @@
               ]
         },
         "widgets": {
-            "basePrefix": "https://cdn.jsdelivr.net/gh/docusign/mock-cdn-assets/widgets/",
+            "basePrefix": "https://cdn.jsdelivr.net/gh/docusign/mock-cdn-assets/development/widgets/",
             "releaseConfig": [
                 {
                   "widgetId": "@1fe/bathtub",
