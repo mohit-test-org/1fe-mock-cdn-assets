@@ -1,2 +1,2 @@
 # mock-cdn-assets
-Work in progress..
+Work in progress...
