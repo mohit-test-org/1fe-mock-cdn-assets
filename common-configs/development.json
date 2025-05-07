@@ -100,14 +100,6 @@
                   "type": "external"
                 },
                 {
-                  "id": "react-router-dom",
-                  "name": "ReactRouterDOM",
-                  "version": "6.30.0",
-                  "isPreloaded": true,
-                  "path": "umd/react-router-dom.development.js",
-                  "type": "external"
-                },
-                {
                   "id": "react-router",
                   "name": "ReactRouter",
                   "version": "6.30.0",
