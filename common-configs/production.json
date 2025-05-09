@@ -151,7 +151,7 @@
                         "enabled": true,
                         "route": "/app1"
                     },
-                    "version": "1.0.1"
+                    "version": "1.0.2"
                 },
                 {
                     "widgetId": "@1fe/starter-kit2",
