@@ -175,13 +175,15 @@
             ]
         }
     },
-    "importMapOverrides": {
+    "devtools": {
+      "importMapOverrides": {
         "enableUI": true,
         "allowedSources": [
           "localhost",
           "127.0.0.1",
           "cdn.jsdelivr.net"
         ]
+      }
     },
     "browserslistConfig": ["defaults", "not dead", "edge>=19"]
 }
