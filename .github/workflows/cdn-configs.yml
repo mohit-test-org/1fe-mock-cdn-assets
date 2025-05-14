@@ -45,11 +45,17 @@ jobs:
           cp common-configs/stage.json live.json && akamai netstorage upload live.json --directory stage/configs --config ~/auth && rm live.json
           cp common-configs/demo.json live.json && akamai netstorage upload live.json --directory demo/configs --config ~/auth && rm live.json
           cp common-configs/production.json live.json && akamai netstorage upload live.json --directory production/configs --config ~/auth && rm live.json
+
+      - name: Upload integration, development, and production folders to NetStorage
+        run: |
+          for folder in integration development production; do
+            akamai netstorage upload "$folder" --directory "$folder" --config ~/auth
+          done
           
       - name: Purge assets to reset cache
         run: |
           set -e
           akamai purge invalidate https://1fe-a.akamaihd.net/integration/configs/live.json https://1fe-a.akamaihd.net/stage/configs/live.json https://1fe-a.akamaihd.net/demo/configs/live.json https://1fe-a.akamaihd.net/production/configs/live.json
-      
-            
-
+          for folder in integration development production; do
+            akamai purge invalidate "https://1fe-a.akamaihd.net/$folder/*"
+          done
