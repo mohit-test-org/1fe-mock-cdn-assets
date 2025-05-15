@@ -66,7 +66,7 @@ jobs:
             find "$folder" -type f | while read file; do
               relative_path="${file#$folder/}"  # Get the relative path of the file
               echo "Uploading $file to $folder/$relative_path..."
-              akamai netstorage upload "$file" --directory "$folder/$relative_path" --config ~/auth || echo "Failed to upload $file"
+              akamai netstorage upload "$file" --directory "$folder" --config ~/auth || echo "Failed to upload $file"
             done
           done
 
