@@ -56,7 +56,7 @@ jobs:
           cp common-configs/integration.json live.json && akamai netstorage upload live.json --directory integration/configs --config ~/auth && rm live.json
           cp common-configs/stage.json live.json && akamai netstorage upload live.json --directory stage/configs --config ~/auth && rm live.json
           cp common-configs/demo.json live.json && akamai netstorage upload live.json --directory demo/configs --config ~/auth && rm live.json
-          cp common-configs/production.json live.json && akamai netstorage upload live.json --directory production/configs --config ~/auth && rm live.json1
+          cp common-configs/production.json live.json && akamai netstorage upload live.json --directory production/configs --config ~/auth && rm live.json
 
       - name: Sync directories to NetStorage using rsync
         run: |
