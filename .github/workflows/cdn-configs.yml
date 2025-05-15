@@ -49,6 +49,15 @@ jobs:
           sudo apt-get install -y rsync
           rsync --version || { echo "rsync installation failed"; exit 1; }
 
+      - name: Validate rsync password file
+        run: |
+          set -e
+          if [ ! -f ~/auth ]; then
+            echo "Error: Password file ~/auth is missing."
+            exit 1
+          fi
+          echo "Password file exists and is accessible."
+
       - name: Upload config files to NetStorage
         run: |
           cp common-configs/integration.json live.json && akamai netstorage upload live.json --directory integration/configs --config ~/auth && rm live.json
@@ -61,7 +70,7 @@ jobs:
           set -e
           for folder in integration development production; do
             echo "Syncing $folder to NetStorage..."
-            timeout 300 rsync -av --progress --delete "$folder/" "user@1fe-nsu.akamaihd.net::$folder" --password-file=~/auth || echo "Failed to sync $folder"
+            timeout 120 rsync -avvv --progress --delete "$folder/" "user@1fe-nsu.akamaihd.net::$folder" --password-file=~/auth || echo "Failed to sync $folder"
           done
 
       - name: Purge all assets with cache tag
