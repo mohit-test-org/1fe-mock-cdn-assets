@@ -57,7 +57,7 @@ jobs:
           for folder in integration development production; do
             find "$folder" -type f | while read file; do
               echo "Uploading $file..."
-              akamai --debug netstorage upload "$file" --directory "$(dirname $file)" --config ~/auth || echo "Failed to upload $file"
+              akamai netstorage upload "$file" --directory "$(dirname $file)" --config ~/auth || echo "Failed to upload $file"
             done
           done
           
@@ -65,9 +65,6 @@ jobs:
         run: |
           set -e
           akamai purge invalidate https://1fe-a.akamaihd.net/integration/configs/live.json https://1fe-a.akamaihd.net/stage/configs/live.json https://1fe-a.akamaihd.net/demo/configs/live.json https://1fe-a.akamaihd.net/production/configs/live.json || echo "Failed to purge config files"
-          for folder in integration development production; do
-            akamai purge invalidate "https://1fe-a.akamaihd.net/$folder/*" || echo "Failed to purge folder $folder"
-          done
 
       - name: Generate list of files to purge
         run: |
