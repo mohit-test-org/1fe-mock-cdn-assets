@@ -51,11 +51,15 @@ jobs:
           cp common-configs/demo.json live.json && akamai netstorage upload live.json --directory demo/configs --config ~/auth && rm live.json
           cp common-configs/production.json live.json && akamai netstorage upload live.json --directory production/configs --config ~/auth && rm live.json
 
-      - name: Akamai upload help
+      - name: Debug upload paths
         run: |
           set -e
-          akamai netstorage upload --help
-          akamai purge invalidate --help
+          for folder in integration development production; do
+            find "$folder" -type f | while read file; do
+              relative_path="${file#$folder/}"
+              echo "Debug: Uploading $file to $folder/$relative_path"
+            done
+          done
 
       - name: Upload integration, development, and production folders to NetStorage
         run: |
@@ -68,7 +72,7 @@ jobs:
               akamai netstorage upload "$file" --directory "$destination_dir/$relative_path" --config ~/auth || echo "Failed to upload $file"
             done
           done
-          
+
       - name: Purge assets to reset cache
         run: |
           set -e
@@ -76,13 +80,14 @@ jobs:
 
       - name: Generate list of files to purge
         run: |
+          set -e
           for folder in integration development production; do
             find "$folder" -type f >> files_to_purge.txt
           done
           echo "Files to purge:"
           cat files_to_purge.txt
 
-      - name: Purge individual files from Akamai cache
+      - name: Purge uploaded files from Akamai cache
         run: |
           set -e
           while read file; do
