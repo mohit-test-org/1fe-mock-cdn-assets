@@ -64,9 +64,12 @@ jobs:
           set -e
           for folder in integration development production; do
             find "$folder" -type f | while read file; do
-              file="${file#$folder/}"  # Remove the folder prefix (e.g., 'development/')
-              echo "Uploading $file to $folder..."
-              akamai netstorage upload "$file" --directory "$folder" --config ~/auth || echo "Failed to upload $file"
+              relative_path="${file#$folder/}"  # Remove the folder prefix (e.g., 'development/')
+              temp_file="temp_${relative_path##*/}"  # Create a temporary file name
+              echo "Uploading $relative_path to $folder..."
+              cp "$file" "$temp_file" && \
+              akamai netstorage upload "$temp_file" --directory "$folder" --config ~/auth && \
+              rm "$temp_file" || echo "Failed to upload $relative_path"
             done
           done
 
