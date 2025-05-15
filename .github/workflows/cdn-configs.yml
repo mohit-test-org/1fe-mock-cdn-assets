@@ -44,33 +44,51 @@ jobs:
           host = 1fe-nsu.akamaihd.net
           cpcode = 1800003" > ~/auth
 
+      - name: Install rsync
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y rsync
+          rsync --version || { echo "rsync installation failed"; exit 1; }
+
+      - name: Validate Akamai configuration files
+        run: |
+          set -e
+          if [ ! -f ~/.edgerc ]; then
+            echo "Error: ~/.edgerc file is missing."
+            exit 1
+          if [ ! -f ~/auth ]; then
+            echo "Error: ~/auth file is missing."
+            exit 1
+          fi
+          echo "Akamai configuration files are valid."
+
       - name: Upload config files to NetStorage
         run: |
           cp common-configs/integration.json live.json && akamai netstorage upload live.json --directory integration/configs --config ~/auth && rm live.json
           cp common-configs/stage.json live.json && akamai netstorage upload live.json --directory stage/configs --config ~/auth && rm live.json
           cp common-configs/demo.json live.json && akamai netstorage upload live.json --directory demo/configs --config ~/auth && rm live.json
-          cp common-configs/production.json live.json && akamai netstorage upload live.json --directory production/configs --config ~/auth && rm live.json
+          cp common-configs/production.json live.json && akamai netstorage upload live.json --directory production/configs --config ~/auth && rm live.json1``
 
-      - name: Akamai upload help
+      - name: Install rsync
         run: |
           set -e
-          akamai netstorage upload --help
-          akamai purge invalidate --help
+          sudo apt-get update
+          sudo apt-get install -y rsync
 
-      - name: Upload integration, development, and production folders to NetStorage
+      - name: Sync directories to NetStorage using rsync
         run: |
           set -e
           for folder in integration development production; do
-            find "$folder" -type f | while read file; do
-              echo "Uploading $file..."
-              akamai netstorage upload "$file" --directory "$(dirname $file)" --config ~/auth || echo "Failed to upload $file"
-            done
+            echo "Syncing $folder to NetStorage..."
+            rsync -av --delete "$folder/" "user@1fe-nsu.akamaihd.net::$folder" --password-file=~/auth || echo "Failed to sync $folder"
           done
-          
-      - name: Purge assets to reset cache
+
+      - name: Purge all assets with cache tag
         run: |
           set -e
-          akamai purge invalidate https://1fe-a.akamaihd.net/integration/configs/live.json https://1fe-a.akamaihd.net/stage/configs/live.json https://1fe-a.akamaihd.net/demo/configs/live.json https://1fe-a.akamaihd.net/production/configs/live.json || echo "Failed to purge config files"
+          echo "Purging all assets with cache tag '1fe'..."
+          akamai purge invalidate --tag 1fe || echo "Failed to purge assets with cache tag '1fe'"
 
       - name: Generate list of files to purge
         run: |
