@@ -29,14 +29,12 @@ jobs:
           akamai install netstorage
           akamai install purge
           
-          set -e
           echo "[ccu]
           client_secret = ${{ secrets.AKAMAI_API_CLIENT_SECRET }}
           host = ${{ secrets.AKAMAI_API_CLIENT_HOST }}
           access_token = ${{ secrets.AKAMAI_API_CLIENT_ACCESS_TOKEN }}
           client_token = ${{ secrets.AKAMAI_API_CLIENT_CLIENT_TOKEN }}" > ~/.edgerc
 
-          set -e
           echo "[default]
           key = ${{ secrets.AKAMAI_NS_UPLOAD_ACCOUNT_KEY }}
           id = 1fe
@@ -63,7 +61,7 @@ jobs:
           set -e
           for folder in integration development production; do
             echo "Syncing $folder to NetStorage..."
-            rsync -av --delete "$folder/" "user@1fe-nsu.akamaihd.net::$folder" --password-file=~/auth || echo "Failed to sync $folder"
+            timeout 300 rsync -av --progress --delete "$folder/" "user@1fe-nsu.akamaihd.net::$folder" --password-file=~/auth || echo "Failed to sync $folder"
           done
 
       - name: Purge all assets with cache tag
@@ -74,6 +72,7 @@ jobs:
 
       - name: Generate list of files to purge
         run: |
+          set -e
           for folder in integration development production; do
             find "$folder" -type f >> files_to_purge.txt
           done
