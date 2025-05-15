@@ -37,7 +37,7 @@ jobs:
           key = ${{ secrets.AKAMAI_NS_UPLOAD_ACCOUNT_KEY }}
           id = 1fe
           group = 1FE
-          host = 1fe.rsync.upload.akamai.com
+          host = 1fe-nsu.akamaihd.net
           cpcode = 1800003" > ~/auth
 
       - name: Install rsync
