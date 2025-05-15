@@ -51,30 +51,12 @@ jobs:
           sudo apt-get install -y rsync
           rsync --version || { echo "rsync installation failed"; exit 1; }
 
-      - name: Validate Akamai configuration files
-        run: |
-          set -e
-          if [ ! -f ~/.edgerc ]; then
-            echo "Error: ~/.edgerc file is missing."
-            exit 1
-          if [ ! -f ~/auth ]; then
-            echo "Error: ~/auth file is missing."
-            exit 1
-          fi
-          echo "Akamai configuration files are valid."
-
       - name: Upload config files to NetStorage
         run: |
           cp common-configs/integration.json live.json && akamai netstorage upload live.json --directory integration/configs --config ~/auth && rm live.json
           cp common-configs/stage.json live.json && akamai netstorage upload live.json --directory stage/configs --config ~/auth && rm live.json
           cp common-configs/demo.json live.json && akamai netstorage upload live.json --directory demo/configs --config ~/auth && rm live.json
-          cp common-configs/production.json live.json && akamai netstorage upload live.json --directory production/configs --config ~/auth && rm live.json1``
-
-      - name: Install rsync
-        run: |
-          set -e
-          sudo apt-get update
-          sudo apt-get install -y rsync
+          cp common-configs/production.json live.json && akamai netstorage upload live.json --directory production/configs --config ~/auth && rm live.json1
 
       - name: Sync directories to NetStorage using rsync
         run: |
