@@ -51,6 +51,12 @@ jobs:
           cp common-configs/demo.json live.json && akamai netstorage upload live.json --directory demo/configs --config ~/auth && rm live.json
           cp common-configs/production.json live.json && akamai netstorage upload live.json --directory production/configs --config ~/auth && rm live.json
 
+      - name: Akamai upload help
+        run: |
+          set -e
+          akamai netstorage upload --help
+          akamai purge invalidate --help
+
       - name: Upload integration, development, and production folders to NetStorage
         run: |
           set -e
