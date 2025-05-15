@@ -87,8 +87,7 @@ jobs:
           for folder in integration development production; do
             echo "Syncing $folder to NetStorage..."
             
-            # rsync -avv -R -e "ssh -o StrictHostKeyChecking=no -i ${filePath}" ${{ parameters.destination }} sshacs@$RSYNC_DOMAIN:/$UPLOAD_DIRECTORY/${{ parameters.environment }}/
-            timeout 600 rsync -avvv --debug=ALL4 --progress "$folder/" "$RSYNC_USER@1fe.rsync.upload.akamai.com::$folder" --password-file="$PASSWORD_FILE" || echo "Failed to sync $folder"
+          timeout 600 rsync -avvv --debug=ALL4 --progress "$folder/" "$RSYNC_USER@1fe.rsync.upload.akamai.com::$folder" --password-file="$PASSWORD_FILE" || echo "Failed to sync $folder"
           done
 
       - name: Purge all assets with cache tag
