@@ -78,16 +78,19 @@ jobs:
         run: |
           set -e
 
+          # Retrieve the rsync password from secrets and write it to the password file
           akamai_ns_rsync_password=${{ secrets.AKAMAI_NS_RSYNC_PASSWORD }}
           PASSWORD_FILE="$HOME/auth"
           echo "$akamai_ns_rsync_password" > "$PASSWORD_FILE"
           chmod 600 "$PASSWORD_FILE"
 
+          # Define the rsync user
           RSYNC_USER="1fe"  # Replace with the correct username
+
+          # Sync each folder to NetStorage
           for folder in integration development production; do
             echo "Syncing $folder to NetStorage..."
-            
-          timeout 600 rsync -avvv --debug=ALL4 --progress "$folder/" "$RSYNC_USER@1fe.rsync.upload.akamai.com::$folder" --password-file="$PASSWORD_FILE" || echo "Failed to sync $folder"
+            timeout 600 rsync -avvv --progress --delete "$folder/" "$RSYNC_USER@1fe.rsync.upload.akamai.com::$folder" --password-file="$PASSWORD_FILE" || echo "Failed to sync $folder"
           done
 
       - name: Purge all assets with cache tag
