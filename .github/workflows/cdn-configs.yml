@@ -53,19 +53,20 @@ jobs:
 
       - name: Upload integration, development, and production folders to NetStorage
         run: |
+          set -e
           for folder in integration development production; do
             find "$folder" -type f | while read file; do
               echo "Uploading $file..."
-              akamai netstorage upload "$file" --directory "$(dirname $file)" --config ~/auth
+              akamai --debug netstorage upload "$file" --directory "$(dirname $file)" --config ~/auth || echo "Failed to upload $file"
             done
           done
           
       - name: Purge assets to reset cache
         run: |
           set -e
-          akamai purge invalidate https://1fe-a.akamaihd.net/integration/configs/live.json https://1fe-a.akamaihd.net/stage/configs/live.json https://1fe-a.akamaihd.net/demo/configs/live.json https://1fe-a.akamaihd.net/production/configs/live.json
+          akamai purge invalidate https://1fe-a.akamaihd.net/integration/configs/live.json https://1fe-a.akamaihd.net/stage/configs/live.json https://1fe-a.akamaihd.net/demo/configs/live.json https://1fe-a.akamaihd.net/production/configs/live.json || echo "Failed to purge config files"
           for folder in integration development production; do
-            akamai purge invalidate "https://1fe-a.akamaihd.net/$folder/*"
+            akamai purge invalidate "https://1fe-a.akamaihd.net/$folder/*" || echo "Failed to purge folder $folder"
           done
 
       - name: Generate list of files to purge
@@ -78,8 +79,9 @@ jobs:
 
       - name: Purge individual files from Akamai cache
         run: |
+          set -e
           while read file; do
             url="https://1fe-a.akamaihd.net/$file"
             echo "Purging $url..."
-            akamai purge invalidate "$url"
+            akamai purge invalidate "$url" || echo "Failed to purge $url"
           done < files_to_purge.txt
