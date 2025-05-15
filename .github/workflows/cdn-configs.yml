@@ -7,10 +7,6 @@ on:
   pull_request:
     branches:
       - main  # Trigger on PRs targeting the main branch
-    #paths:
-    #  - common-configs/**
-
-# test
 
 jobs:
   upload-and-purge:
@@ -39,7 +35,7 @@ jobs:
           key = ${{ secrets.AKAMAI_NS_UPLOAD_ACCOUNT_KEY }}
           id = 1fe
           group = 1FE
-          host = 1fe-nsu.akamaihd.net
+          host = 1fe.rsync.upload.akamai.com
           cpcode = 1800003" > ~/auth
 
       - name: Install rsync
@@ -70,7 +66,7 @@ jobs:
           set -e
           for folder in integration development production; do
             echo "Syncing $folder to NetStorage..."
-            timeout 120 rsync -avvv --progress --delete "$folder/" "user@1fe-nsu.akamaihd.net::$folder" --password-file=~/auth || echo "Failed to sync $folder"
+            timeout 600 rsync -avvv --progress --delete "$folder/" "user@1fe.rsync.upload.akamai.com::$folder" --password-file=~/auth || echo "Failed to sync $folder"
           done
 
       - name: Purge all assets with cache tag
