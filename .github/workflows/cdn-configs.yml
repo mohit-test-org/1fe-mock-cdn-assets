@@ -8,8 +8,6 @@ on:
     branches:
       - main  # Trigger on PRs targeting the main branch
 
-# trigger
-
 jobs:
   upload-and-purge:
     runs-on: ubuntu-latest
@@ -78,9 +76,10 @@ jobs:
         run: |
           set -e
           PASSWORD_FILE="$HOME/auth"
+          RSYNC_USER="1fe"  # Replace with the correct username
           for folder in integration development production; do
             echo "Syncing $folder to NetStorage..."
-            timeout 600 rsync -avvv --progress --delete "$folder/" "user@1fe.rsync.upload.akamai.com::$folder" --password-file="$PASSWORD_FILE" || echo "Failed to sync $folder"
+            timeout 600 rsync -avvv --debug=ALL4 --progress --delete "$folder/" "$RSYNC_USER@1fe.rsync.upload.akamai.com::$folder" --password-file="$PASSWORD_FILE" || echo "Failed to sync $folder"
           done
 
       - name: Purge all assets with cache tag
