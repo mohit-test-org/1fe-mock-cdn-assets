@@ -8,6 +8,8 @@ on:
     branches:
       - main  # Trigger on PRs targeting the main branch
 
+# trigger
+
 jobs:
   upload-and-purge:
     runs-on: ubuntu-latest
