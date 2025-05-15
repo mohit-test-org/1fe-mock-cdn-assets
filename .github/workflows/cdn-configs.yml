@@ -10,8 +10,6 @@ on:
     #paths:
     #  - common-configs/**
 
-# test
-
 jobs:
   upload-and-purge:
     runs-on: ubuntu-latest
