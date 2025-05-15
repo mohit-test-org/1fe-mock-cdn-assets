@@ -67,9 +67,9 @@ jobs:
           for folder in integration development production; do
             find "$folder" -type f | while read file; do
               relative_path="${file#$folder/}"  # Get the relative path of the file
-              destination_dir="$folder"  # Use only the folder name as the destination directory
-              echo "Uploading $file to $destination_dir/$relative_path..."
-              akamai netstorage upload "$file" --directory "$destination_dir/$relative_path" --config ~/auth || echo "Failed to upload $file"
+              destination_dir="$folder/${relative_path%/*}"  # Use the folder name and the parent directory of the file
+              echo "Uploading $file to $destination_dir..."
+              akamai netstorage upload "$file" --directory "$destination_dir" --config ~/auth || echo "Failed to upload $file"
             done
           done
 
