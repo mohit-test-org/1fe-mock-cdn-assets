@@ -64,12 +64,12 @@ jobs:
           set -e
           for folder in integration development production; do
             find "$folder" -type f | while read file; do
-              relative_path="${file#$folder/}"  # Remove the folder prefix (e.g., 'development/')
-              temp_file="temp_${relative_path##*/}"  # Create a temporary file name
-              echo "Uploading $relative_path to $folder..."
-              cp "$file" "$temp_file" && \
-              akamai netstorage upload "$temp_file" --directory "$folder" --config ~/auth && \
-              rm "$temp_file" || echo "Failed to upload $relative_path"
+              file_name="${file##*/}"  # Extract just the file name
+              destination_dir="${file%/*}"  # Extract the directory path minus the file name
+              echo "Uploading $file_name to $destination_dir..."
+              cp "$file" "$file_name" && \
+              akamai netstorage upload "$file_name" --directory "$destination_dir" --config ~/auth && \
+              rm "$file_name" || echo "Failed to upload $file_name"
             done
           done
 
