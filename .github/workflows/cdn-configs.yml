@@ -56,6 +56,17 @@ jobs:
           fi
           echo "Password file exists and is accessible."
 
+      - name: Validate and set permissions for rsync password file
+        run: |
+          set -e
+          PASSWORD_FILE="$HOME/auth"
+          if [ ! -f "$PASSWORD_FILE" ]; then
+            echo "Error: Password file $PASSWORD_FILE is missing."
+            exit 1
+          fi
+          chmod 600 "$PASSWORD_FILE"
+          echo "Password file permissions set to 600."
+
       - name: Upload config files to NetStorage
         run: |
           cp common-configs/integration.json live.json && akamai netstorage upload live.json --directory integration/configs --config ~/auth && rm live.json
@@ -67,10 +78,6 @@ jobs:
         run: |
           set -e
           PASSWORD_FILE="$HOME/auth"
-          if [ ! -f "$PASSWORD_FILE" ]; then
-            echo "Error: Password file $PASSWORD_FILE is missing."
-            exit 1
-          fi
           for folder in integration development production; do
             echo "Syncing $folder to NetStorage..."
             timeout 600 rsync -avvv --progress --delete "$folder/" "user@1fe.rsync.upload.akamai.com::$folder" --password-file="$PASSWORD_FILE" || echo "Failed to sync $folder"
