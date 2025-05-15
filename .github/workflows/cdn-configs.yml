@@ -66,9 +66,14 @@ jobs:
       - name: Sync directories to NetStorage using rsync
         run: |
           set -e
+          PASSWORD_FILE="$HOME/auth"
+          if [ ! -f "$PASSWORD_FILE" ]; then
+            echo "Error: Password file $PASSWORD_FILE is missing."
+            exit 1
+          fi
           for folder in integration development production; do
             echo "Syncing $folder to NetStorage..."
-            timeout 600 rsync -avvv --progress --delete "$folder/" "user@1fe.rsync.upload.akamai.com::$folder" --password-file=~/auth || echo "Failed to sync $folder"
+            timeout 600 rsync -avvv --progress --delete "$folder/" "user@1fe.rsync.upload.akamai.com::$folder" --password-file="$PASSWORD_FILE" || echo "Failed to sync $folder"
           done
 
       - name: Purge all assets with cache tag
