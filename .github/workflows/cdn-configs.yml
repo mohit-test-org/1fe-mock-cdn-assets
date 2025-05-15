@@ -67,3 +67,19 @@ jobs:
           for folder in integration development production; do
             akamai purge invalidate "https://1fe-a.akamaihd.net/$folder/*"
           done
+
+      - name: Generate list of files to purge
+        run: |
+          for folder in integration development production; do
+            find "$folder" -type f >> files_to_purge.txt
+          done
+          echo "Files to purge:"
+          cat files_to_purge.txt
+
+      - name: Purge individual files from Akamai cache
+        run: |
+          while read file; do
+            url="https://1fe-a.akamaihd.net/$file"
+            echo "Purging $url..."
+            akamai purge invalidate "$url"
+          done < files_to_purge.txt
