@@ -47,25 +47,19 @@ jobs:
           sudo apt-get install -y rsync
           rsync --version || { echo "rsync installation failed"; exit 1; }
 
-      - name: Validate rsync password file
+      - name: Sync directories to NetStorage using rsync
         run: |
           set -e
-          if [ ! -f ~/auth ]; then
-            echo "Error: Password file ~/auth is missing."
-            exit 1
-          fi
-          echo "Password file exists and is accessible."
 
-      - name: Validate and set permissions for rsync password file
-        run: |
-          set -e
-          PASSWORD_FILE="$HOME/auth"
-          if [ ! -f "$PASSWORD_FILE" ]; then
-            echo "Error: Password file $PASSWORD_FILE is missing."
-            exit 1
-          fi
-          chmod 600 "$PASSWORD_FILE"
-          echo "Password file permissions set to 600."
+          # Write the SSH key from secrets to a file
+          echo "${{ secrets.AKAMAI_NS_SSH_PRIVATE_KEY }}" > $HOME/key.pem
+          chmod 600 $HOME/key.pem
+
+          # Sync each folder's contents to NetStorage using rsync over SSH
+          for folder in integration development production; do
+            echo "Syncing contents of $folder to NetStorage..."
+            rsync -avv --delete -RO --dry-run -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" "$folder/" "sshacs@1fe.rsync.upload.akamai.com:$folder"
+          done
 
       - name: Upload config files to NetStorage
         run: |
@@ -74,45 +68,8 @@ jobs:
           cp common-configs/demo.json live.json && akamai netstorage upload live.json --directory demo/configs --config ~/auth && rm live.json
           cp common-configs/production.json live.json && akamai netstorage upload live.json --directory production/configs --config ~/auth && rm live.json
 
-      - name: Sync directories to NetStorage using rsync
-        run: |
-          set -e
-
-          # Retrieve the rsync password from secrets and write it to the password file
-          akamai_ns_rsync_password=${{ secrets.AKAMAI_NS_RSYNC_PASSWORD }}
-          PASSWORD_FILE="$HOME/auth"
-          echo "$akamai_ns_rsync_password" > "$PASSWORD_FILE"
-          chmod 600 "$PASSWORD_FILE"
-
-          # Define the rsync user
-          RSYNC_USER="1fe"  # Replace with the correct username
-
-          # Sync each folder to NetStorage
-          for folder in integration development production; do
-            echo "Syncing $folder to NetStorage..."
-            timeout 600 rsync -avvv --progress --delete "$folder/" "$RSYNC_USER@1fe.rsync.upload.akamai.com::$folder" --password-file="$PASSWORD_FILE" || echo "Failed to sync $folder"
-          done
-
       - name: Purge all assets with cache tag
         run: |
           set -e
           echo "Purging all assets with cache tag '1fe'..."
           akamai purge invalidate --tag 1fe || echo "Failed to purge assets with cache tag '1fe'"
-
-      - name: Generate list of files to purge
-        run: |
-          set -e
-          for folder in integration development production; do
-            find "$folder" -type f >> files_to_purge.txt
-          done
-          echo "Files to purge:"
-          cat files_to_purge.txt
-
-      - name: Purge individual files from Akamai cache
-        run: |
-          set -e
-          while read file; do
-            url="https://1fe-a.akamaihd.net/$file"
-            echo "Purging $url..."
-            akamai purge invalidate "$url" || echo "Failed to purge $url"
-          done < files_to_purge.txt
