@@ -71,5 +71,5 @@ jobs:
       - name: Purge all assets with cache tag
         run: |
           set -e
-          echo "Purging all assets with cache tag using akamai-purge..."
-          akamai purge invalidate tag 1fe --edgerc .edgerc 
+          echo "Purging all assets with cache tag using akamai CLI..."
+          akamai purge invalidate --tag 1fe
