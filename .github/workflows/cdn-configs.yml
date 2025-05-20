@@ -55,7 +55,7 @@ jobs:
           # Sync each folder's contents to NetStorage using rsync over SSH
           for folder in integration development production; do
             echo "Syncing contents of $folder to NetStorage..."
-            rsync -avv --delete -RO --dry-run -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" "$folder/" "sshacs@1fe.rsync.upload.akamai.com:$folder"
+            rsync -avv --delete -RO -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" "$folder/" "sshacs@1fe.rsync.upload.akamai.com:$folder"
           done
 
       - name: Upload config files to NetStorage
