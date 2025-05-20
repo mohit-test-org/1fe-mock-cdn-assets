@@ -6,9 +6,6 @@ on:
       - main  # Trigger on push to the main branch
     #paths:
     #  - common-configs/**
-  pull_request:
-    branches:
-      - main  # Trigger on PRs targeting the main branch
 
 jobs:
   upload-and-purge:
