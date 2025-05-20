@@ -72,4 +72,4 @@ jobs:
         run: |
           set -e
           echo "Purging all assets with cache tag using akamai-purge..."
-          akamai purge --edgerc .edgerc cachePurgeByType --tag 1fe
+          akamai purge --edgerc .edgerc --type tag 1fe
