@@ -5,7 +5,10 @@ on:
     branches:
       - main  # Trigger on push to the main branch
     #paths:
-      #  - common-configs/**
+    #  - common-configs/**
+  pull_request:
+    branches:
+      - main  # Trigger on PRs targeting the main branch
 
 jobs:
   upload-and-purge:
@@ -68,5 +71,5 @@ jobs:
       - name: Purge all assets with cache tag
         run: |
           set -e
-          echo "Purging all assets with cache tag '1fe'..."
-          akamai purge invalidate --tag 1fe || echo "Failed to purge assets with cache tag '1fe'"
+          echo "Purging all assets with cache tag using akamai-purge..."
+          akamai-purge --edgerc .edgerc cachePurgeByType --tag 1fe
