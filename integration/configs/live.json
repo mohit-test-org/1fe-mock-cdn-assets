@@ -1,0 +1,55 @@
+{
+  "libraries": {
+      "basePrefix": "https://cdn.jsdelivr.net/gh/docusign/mock-cdn-assets/integration/libs/"
+  },
+  "widgets": {
+      "basePrefix": "https://cdn.jsdelivr.net/gh/docusign/mock-cdn-assets/integration/widgets/",
+      "configs": [
+          {
+              "widgetId": "@1fe/bathtub",
+              "type": "system",
+              "plugin": {
+                  "enabled": true,
+                  "route": "/bathtub"
+              }
+          },
+          {
+              "widgetId": "@1fe/starter-kit",
+              "plugin": {
+                  "enabled": true,
+                  "route": "/app1"
+              }
+          },
+          {
+              "widgetId": "@1fe/starter-kit2",
+              "plugin": {
+                  "enabled": true,
+                  "route": "/app2"
+              }
+          },
+          {
+            "widgetId": "@1fe/authed-widget",
+            "plugin": {
+                "enabled": true,
+                "route": "/authed-widget",
+                "auth": {
+                    "authenticationType": "required"
+                }
+            }
+        }
+      ]
+  },
+  "platform": {
+    "devtools": {
+      "importMapOverrides": {
+        "enableUI": true,
+        "allowedSources": [
+          "localhost",
+          "127.0.0.1",
+          "cdn.jsdelivr.net"
+        ]
+      }
+    },
+    "browserslistConfig": ["defaults", "not dead", "edge>=19"]
+  }
+}
