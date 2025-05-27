@@ -58,7 +58,7 @@ jobs:
           # Sync each folder's contents to NetStorage using rsync over SSH
           for folder in integration production; do
             echo "Syncing contents of $folder to NetStorage..."
-            rsync -avv --delete -RO -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" "$folder/" "sshacs@1fe.rsync.upload.akamai.com:$folder"
+            rsync -avv --delete -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" "$folder/" "sshacs@1fe.rsync.upload.akamai.com:$folder/"
           done
 
       - name: Purge all assets with cache tag
