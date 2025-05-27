@@ -47,19 +47,67 @@ jobs:
           sudo apt-get install -y rsync
           rsync --version || { echo "rsync installation failed"; exit 1; }
 
-      - name: Sync directories to NetStorage using rsync
+      - name: Sync directories and clean up development/demo from NetStorage
         run: |
-          set -e
+          set -e # Exit immediately if a command exits with a non-zero status
 
-          # Write the SSH key from secrets to a file
+          # Ensure SSH key is available (as in your original script)
           echo "${{ secrets.AKAMAI_NS_SSH_PRIVATE_KEY }}" > $HOME/key.pem
           chmod 600 $HOME/key.pem
 
-          # Sync each folder's contents to NetStorage using rsync over SSH
-          for folder in integration production; do
-            echo "Syncing contents of $folder to NetStorage..."
-            rsync -avv --delete -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" "$folder/" "sshacs@1fe.rsync.upload.akamai.com:$folder/"
+          # Define folders for cleanup (these will be emptied on remote)
+          cleanup_folders_on_remote="development demo"
+
+          # Create empty local versions of these directories on the GitHub Runner
+          echo "Creating temporary empty local directories for cleanup: $cleanup_folders_on_remote"
+          for folder_to_cleanup in $cleanup_folders_on_remote; do
+            mkdir "$folder_to_cleanup"
+            echo "Created empty local directory: $folder_to_cleanup"
           done
+
+          # Define all folders to be processed by rsync:
+          # - Your standard sync folders (integration, production)
+          # - The folders marked for cleanup (development, demo)
+          # For cleanup folders, rsync will use the empty local versions created above.
+          all_folders_to_process="integration production $cleanup_folders_on_remote"
+          
+          echo "Starting rsync process for folders: $all_folders_to_process"
+          for folder in $all_folders_to_process; do
+            echo "-----------------------------------------------------"
+            echo "Processing folder: $folder"
+            
+            is_cleanup_target=false
+            for cf_item in $cleanup_folders_on_remote; do
+              if [ "$folder" == "$cf_item" ]; then
+                is_cleanup_target=true
+                break
+              fi
+            done
+
+            if [ "$is_cleanup_target" = true ]; then
+              echo "--> ACTION: This is '$folder'. Its contents on remote will be deleted to match the empty local source."
+            else
+              echo "--> ACTION: This is '$folder'. It will be synced from local source to remote."
+            fi
+            
+            rsync -avv --delete \
+              -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" \
+              "$folder/" \
+              "sshacs@1fe.rsync.upload.akamai.com:$folder/"
+            echo "Finished rsync for folder: $folder"
+          done
+          echo "-----------------------------------------------------"
+
+          echo "Attempting to remove the emptied remote directories: $cleanup_folders_on_remote"
+          for folder_to_cleanup in $cleanup_folders_on_remote; do
+            echo "Attempting rmdir for remote '$folder_to_cleanup' directory..."
+            ssh -o StrictHostKeyChecking=no -i $HOME/key.pem \
+              sshacs@1fe.rsync.upload.akamai.com \
+              "rmdir $folder_to_cleanup" \
+              && echo "--> SUCCESS: Successfully removed remote directory '$folder_to_cleanup'." \
+              || echo "--> INFO: Could not remove remote directory '$folder_to_cleanup'. It might not have existed, not been empty, or an issue occurred (this may be okay if rsync already handled it or it was previously removed)."
+          done
+          echo "-----------------------------------------------------"
 
       - name: Purge all assets with cache tag
         run: |
