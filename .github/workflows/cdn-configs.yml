@@ -61,13 +61,6 @@ jobs:
             rsync -avv --delete -RO -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" "$folder/" "sshacs@1fe.rsync.upload.akamai.com:$folder"
           done
 
-      - name: Upload config files to NetStorage
-        run: |
-          cp common-configs/integration.json live.json && akamai netstorage upload live.json --directory integration/configs --config ~/auth && rm live.json
-          cp common-configs/stage.json live.json && akamai netstorage upload live.json --directory stage/configs --config ~/auth && rm live.json
-          cp common-configs/demo.json live.json && akamai netstorage upload live.json --directory demo/configs --config ~/auth && rm live.json
-          cp common-configs/production.json live.json && akamai netstorage upload live.json --directory production/configs --config ~/auth && rm live.json
-
       - name: Purge all assets with cache tag
         run: |
           set -e
