@@ -1,0 +1,27 @@
+[
+    { "id": "@1fe/cli", "version": "1.13.4", "type": "installed" },
+    {
+        "id": "react-dom",
+        "name": "ReactDOM",
+        "version": "17.0.2",
+        "isPreloaded": true,
+        "path": "umd/react-dom.development.js",
+        "type": "external"
+    },
+    {
+        "id": "react",
+        "name": "React",
+        "version": "17.0.2",
+        "isPreloaded": true,
+        "path": "umd/react.development.js",
+        "type": "external"
+    },
+    {
+        "id": "antd",
+        "name": "antd",
+        "version": "5.25.2",
+        "isPreloaded": true,
+        "path": "umd/antd.js",
+        "type": "external"
+    }
+]
