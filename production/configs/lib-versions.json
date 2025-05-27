@@ -15,5 +15,13 @@
         "isPreloaded": true,
         "path": "umd/react.development.js",
         "type": "external"
+    },
+    {
+        "id": "antd",
+        "name": "antd",
+        "version": "5.25.2",
+        "isPreloaded": true,
+        "path": "umd/antd.js",
+        "type": "external"
     }
 ]

@@ -1,9 +1,9 @@
 {
   "libraries": {
-      "basePrefix": "https://cdn.jsdelivr.net/gh/docusign/mock-cdn-assets/integration/libs/"
+      "basePrefix": "https://1fe-a.akamaihd.net/integration/libs/"
   },
   "widgets": {
-      "basePrefix": "https://cdn.jsdelivr.net/gh/docusign/mock-cdn-assets/integration/widgets/",
+      "basePrefix": "https://1fe-a.akamaihd.net/integration/widgets/",
       "configs": [
           {
               "widgetId": "@1fe/bathtub",
@@ -46,7 +46,7 @@
         "allowedSources": [
           "localhost",
           "127.0.0.1",
-          "cdn.jsdelivr.net"
+          "1fe-a.akamaihd.net"
         ]
       }
     },
