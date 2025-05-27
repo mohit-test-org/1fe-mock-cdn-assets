@@ -18,9 +18,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Akamai CLI, NetStorage Module, and rsync
+      - name: Install Akamai CLI, NetStorage Module, rsync, and Prepare Credentials
         run: |
-          set -e
+          set -e # This setup part should be strict
+          echo "Installing Akamai CLI, modules, and rsync..."
           # Akamai CLI and Modules
           curl -sL https://github.com/akamai/cli/releases/download/v2.0.0/akamai-v2.0.0-linuxamd64 -o akamai
           chmod +x akamai
@@ -28,15 +29,14 @@ jobs:
           akamai install netstorage
           akamai install purge
           
-          # Akamai API Credentials
+          # Akamai API Credentials for Purge
           echo "[ccu]
           client_secret = ${{ secrets.AKAMAI_API_CLIENT_SECRET }}
           host = ${{ secrets.AKAMAI_API_CLIENT_HOST }}
           access_token = ${{ secrets.AKAMAI_API_CLIENT_ACCESS_TOKEN }}
           client_token = ${{ secrets.AKAMAI_API_CLIENT_CLIENT_TOKEN }}" > ~/.edgerc
 
-          # NetStorage Upload Credentials (for rsync via SSH key, and also for NetStorage CLI if used)
-          # The rsync part primarily uses the SSH key. This auth file is for the 'akamai netstorage' CLI commands.
+          # NetStorage Upload Account Credentials (for Akamai NetStorage CLI commands, rsync uses SSH key)
           echo "[default]
           key = ${{ secrets.AKAMAI_NS_UPLOAD_ACCOUNT_KEY }}
           id = 1fe 
@@ -47,57 +47,59 @@ jobs:
           # Install rsync
           sudo apt-get update
           sudo apt-get install -y rsync
-          rsync --version || { echo "rsync installation failed"; exit 1; }
+          rsync --version || { echo "FATAL: rsync installation failed"; exit 1; }
           
-          # Prepare SSH key for rsync
           echo "Setting up SSH key for rsync..."
           echo "${{ secrets.AKAMAI_NS_SSH_PRIVATE_KEY }}" > $HOME/key.pem
           chmod 600 $HOME/key.pem
+          echo "Setup complete."
 
+      # --- ONE-TIME CLEANUP STEP ---
+      # This step should be removed or commented out after successful execution.
       - name: Perform One-Time Cleanup of Remote 'development' and 'demo' Directories
+        # This step will attempt all cleanup actions and report on them.
+        # `set +e` ensures the script continues even if some rsync/ssh commands fail for one target.
         run: |
-          # Not using 'set -e' here to ensure all cleanup attempts for all targets are made.
+          set +e # Allow commands to fail without stopping the whole script block
           echo "=== Starting One-Time Remote Directory Cleanup ==="
           
           cleanup_targets="development demo"
-          critical_cleanup_error_occurred=false
+          overall_cleanup_step_status=0 # 0 for success, 1 for critical failure
 
           echo "Creating local empty directories for cleanup: $cleanup_targets"
           for target_dir in $cleanup_targets; do
             if ! mkdir -p "$target_dir"; then
-              echo "    ERROR: Failed to create local directory '$target_dir'."
-              critical_cleanup_error_occurred=true # Consider this critical enough
+              echo "    ERROR: Failed to create local directory '$target_dir'. This is a critical local error."
+              overall_cleanup_step_status=1 # Mark critical failure
             fi
           done
 
-          if [ "$critical_cleanup_error_occurred" = true ]; then
+          if [ "$overall_cleanup_step_status" -ne 0 ]; then
             echo "Halting cleanup step due to errors creating essential local directories."
-            exit 1 # Fail this step if we can't even prepare locally
+            exit "$overall_cleanup_step_status"
           fi
 
           echo "Attempting to empty contents of remote directories: $cleanup_targets"
           for target_dir in $cleanup_targets; do
+            echo "  ---------------------------------------------------"
             echo "  Processing cleanup for remote '$target_dir'..."
-            # Using -av instead of -avv to slightly reduce log verbosity for this step
-            rsync -av --delete \
+            # Using -avv for detailed logs, consistent with other steps
+            rsync -avv --delete \
               -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" \
               "$target_dir/" \
               "sshacs@1fe.rsync.upload.akamai.com:$target_dir/"
             rsync_exit_code=$?
             if [ $rsync_exit_code -eq 0 ]; then
-              echo "    Successfully emptied remote '$target_dir' (or it was already empty/non-existent)."
+              echo "    SUCCESS: rsync successfully emptied remote '$target_dir' (or it was already empty/non-existent)."
+            elif [ $rsync_exit_code -eq 23 ] || [ $rsync_exit_code -eq 24 ]; then
+              echo "    WARNING: rsync for '$target_dir' (to empty contents) finished with code $rsync_exit_code. This often means the directory was emptied but metadata updates on deleted items failed (common) or source files vanished (less common for empty source). The directory might be usable for rmdir."
             else
-              # Exit code 23 can occur if setting times on deleted subdirs fails, but dir might still be empty.
-              # For cleanup, we'll note this as a warning but not necessarily a critical failure for this step's overall status,
-              # as the main goal is to empty content, and rmdir will be attempted next.
-              echo "    WARNING: rsync for '$target_dir' (to empty contents) finished with code $rsync_exit_code. The directory might be empty, but review logs if issues persist."
-              if [ $rsync_exit_code -ne 23 ] && [ $rsync_exit_code -ne 24 ]; then # 24 is "vanished source files"
-                 # If it's an error other than the common ones seen with deletions, mark it.
-                 critical_cleanup_error_occurred=true
-              fi
+              echo "    ERROR: rsync for '$target_dir' failed with critical exit code $rsync_exit_code. Contents may not be empty."
+              overall_cleanup_step_status=1 # Mark critical failure
             fi
           done
 
+          echo "  ---------------------------------------------------"
           echo "Attempting to remove the (now hopefully empty) remote directories: $cleanup_targets"
           for target_dir in $cleanup_targets; do
             echo "  Attempting rmdir for remote '$target_dir'..."
@@ -106,22 +108,24 @@ jobs:
               "rmdir $target_dir"
             ssh_exit_code=$?
             if [ $ssh_exit_code -eq 0 ]; then
-              echo "    Successfully removed remote directory '$target_dir'."
+              echo "    SUCCESS: Successfully removed remote directory '$target_dir'."
             else
-              echo "    INFO: Could not remove remote directory '$target_dir' (exit code $ssh_exit_code). Common reasons: it didn't exist, wasn't fully emptied, or a permission issue."
-              # Not marking this as a critical_cleanup_error, as emptying was the primary goal.
+              echo "    INFO: Could not remove remote directory '$target_dir' (ssh exit code $ssh_exit_code). Common reasons: it didn't exist, wasn't fully emptied by rsync, or a permission issue."
+              # Not necessarily a critical failure for this cleanup step's overall status,
+              # as emptying contents was the primary rsync goal.
             fi
           done
 
+          echo "  ---------------------------------------------------"
           echo "=== One-Time Remote Directory Cleanup Attempted ==="
           echo "IMPORTANT: Review the logs from this step carefully."
           echo "           For all future workflow runs, this 'Perform One-Time Cleanup...' step"
           echo "           should be REMOVED or COMMENTED OUT from your YAML file."
           
-          if [ "$critical_cleanup_error_occurred" = true ]; then
-            echo "ERROR: Some critical rsync operations during cleanup failed. Please review logs."
-            exit 1 # Fail this step if rsync had critical errors
+          if [ "$overall_cleanup_step_status" -ne 0 ]; then
+            echo "ERROR: Critical errors occurred during the rsync phase of cleanup. Please review logs."
           fi
+          exit "$overall_cleanup_step_status" # Ensure step status reflects critical rsync errors
 
       - name: Sync Standard Directories (integration, production) to NetStorage
         run: |
@@ -132,16 +136,17 @@ jobs:
 
           echo "Processing standard sync for folders: $standard_sync_folders"
           for folder_name in $standard_sync_folders; do
+            echo "  ---------------------------------------------------"
             echo "  Processing '$folder_name'..."
-            # Using -avv for main sync to get detailed logs as before
             rsync -avv --delete \
               -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" \
               "$folder_name/" \
               "sshacs@1fe.rsync.upload.akamai.com:$folder_name/"
             echo "  Finished rsync for '$folder_name'."
           done
+          echo "  ---------------------------------------------------"
           echo "=== Standard Directory Sync Reported Completion by rsync ==="
-          echo "Note: If rsync reported errors (e.g., exit code 23 for failed 'set times'), this step may still be marked as failed by GitHub Actions due to 'set -e'."
+          echo "Note: If rsync reported errors (e.g., exit code 23 for 'failed to set times'), this step may still be marked as failed by GitHub Actions due to 'set -e'."
 
       - name: Purge all assets with cache tag
         run: |
