@@ -63,7 +63,7 @@ jobs:
           set +e # Allow commands to fail without stopping the whole script block
           echo "=== Starting One-Time Remote Directory Cleanup ==="
           
-          cleanup_targets="development demo"
+          cleanup_targets="development demo stage"
           overall_cleanup_step_status=0 # 0 for success, 1 for critical failure
 
           echo "Creating local empty directories for cleanup: $cleanup_targets"
