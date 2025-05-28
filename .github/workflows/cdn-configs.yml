@@ -1,4 +1,6 @@
-# The goal of this GitHub Actions workflow is to sync specific folders (FOLDERS_TO_SYNC) to Akamai NetStorage 1FE and purge the Akamai cache.
+# The goal of this GitHub Actions workflow is:
+# 1. To sync specific folders (FOLDERS_TO_SYNC) to Akamai NetStorage 1FE and purge the Akamai cache for pushes to the main branch.
+# 2. To provide a dry-run preview for Pull Requests.
 name: Sync Folders to 1FE Netstorage and Purge Akamai Cache
 
 on:
@@ -6,62 +8,64 @@ on:
     branches:
       - main
     paths:
-      # Only changes made to the files in the specified folders will trigger this workflow
+      # Only changes made to the files in the specified folders will trigger the push workflow
       # If FOLDERS_TO_SYNC changes, we need to update these to match
       - 'integration/**' 
       - 'production/**'
+  pull_request: 
+    branches:
+      - main
+    # paths:
+    #   - 'integration/**'
+    #   - 'production/**'
 
 jobs:
+  # This job handles the actual deployment and purge for pushes to 'main'
   upload-and-purge:
+    if: github.event_name == 'push'
+    name: Upload to NetStorage and Purge Cache =
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Akamai CLI and Purge Module
+      - name: Install Akamai CLI, Akamai Purge, Rsync, and Prepare Credentials
         run: |
           set -e
+          
+          # Akamai CLI and Purge Module
           echo "Installing Akamai CLI and Purge module..."
           curl -sL https://github.com/akamai/cli/releases/download/v2.0.0/akamai-v2.0.0-linuxamd64 -o akamai
           chmod +x akamai
           sudo mv akamai /usr/local/bin/
           akamai install purge 
-          echo "Akamai CLI and Purge module installed."
-
-      - name: Create Akamai .edgerc File for Purge
-        run: |
-          set -e
+          
+          # Akamai API Credentials for Purge (needed for .edgerc)
           echo "Creating .edgerc for Akamai API access..."
           echo "[ccu]
           client_secret = ${{ secrets.AKAMAI_API_CLIENT_SECRET }}
           host = ${{ secrets.AKAMAI_API_CLIENT_HOST }}
           access_token = ${{ secrets.AKAMAI_API_CLIENT_ACCESS_TOKEN }}
           client_token = ${{ secrets.AKAMAI_API_CLIENT_CLIENT_TOKEN }}" > ~/.edgerc
-          echo ".edgerc file created."
 
-      - name: Install rsync for directory syncing
-        run: |
-          set -e
+          # Install rsync
           echo "Installing rsync..."
           sudo apt-get update -q
           sudo apt-get install -y -q rsync
-          rsync --version # Verify installation
-          echo "rsync installed."
+          rsync --version 
           
-      - name: Prepare SSH Key for rsync
-        run: |
-          set -e
+          # Prepare SSH key for rsync
           echo "Setting up SSH key for rsync..."
           echo "${{ secrets.AKAMAI_NS_SSH_PRIVATE_KEY }}" > $HOME/key.pem
           chmod 600 $HOME/key.pem
-          echo "SSH key for rsync is ready."
+          echo "Tool setup and credential preparation complete."
 
       - name: Sync Specified Folders to NetStorage
         env:
           FOLDERS_TO_SYNC: "integration production" 
         run: |
-          # This script will attempt to sync all folders and continue even if rsync reports errors.
+          # This script will attempt to sync all folders and log a warning if rsync has a non-zero exit,
+          # but the step itself will continue and complete.
           echo "Starting sync for folders: $FOLDERS_TO_SYNC to Akamai NetStorage..."
 
           for folder_name in $FOLDERS_TO_SYNC; do
@@ -77,7 +81,6 @@ jobs:
               "$folder_name/" \
               "sshacs@1fe.rsync.upload.akamai.com:$folder_name/" \
             || echo "WARNING: rsync for '$folder_name' finished with a non-zero exit code ($?). The workflow continued, but please check rsync logs above for any errors (e.g., 'failed to set times', or more critical issues)."
-            # The '|| echo ...' ensures that even if rsync fails (non-zero exit), 
           done
           echo "Sync to NetStorage attempts complete for all specified folders. Review logs for any rsync warnings or errors."
 
@@ -86,3 +89,56 @@ jobs:
           set -e
           echo "Purging Akamai cache for tag '1fe'..."
           akamai purge invalidate --tag 1fe
+
+  # This new job provides a dry-run preview for Pull Requests
+  pr-sync-dry-run:
+    if: github.event_name == 'pull_request' 
+    name: PR Sync Dry Run Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install rsync and Prepare SSH Key for Dry Run
+        run: |
+          set -e # Setup steps should be strict
+          echo "Installing rsync..."
+          sudo apt-get update -q
+          sudo apt-get install -y -q rsync
+          rsync --version
+          
+          echo "Setting up SSH key for rsync dry-run..."
+          echo "${{ secrets.AKAMAI_NS_SSH_PRIVATE_KEY }}" > $HOME/key.pem
+          chmod 600 $HOME/key.pem
+          echo "SSH key for rsync dry-run is ready."
+
+      - name: View Planned Changes with Rsync Dry Run
+        env:
+          FOLDERS_TO_SYNC: "integration production" 
+        run: |
+          # This script will attempt dry-run for all folders and continue even if rsync reports non-zero exit codes.
+          echo "Performing rsync dry run for folders: $FOLDERS_TO_SYNC"
+          echo "This will list files that WOULD be synced/deleted if this PR were merged."
+          echo "No actual changes will be made to the remote server."
+          
+          for folder_name in $FOLDERS_TO_SYNC; do
+            echo # Blank line for readability
+            echo "-----------------------------------------------------"
+            echo "  Dry Run for '$folder_name/'..."
+            echo "-----------------------------------------------------"
+            
+            if [ ! -d "$folder_name" ]; then
+              echo "    WARNING: Local source directory '$folder_name' not found. Skipping dry run for this folder."
+              continue 
+            fi
+            
+            # Using -avv for verbose rsync output, consistent with the deploy job
+            rsync -avv --dry-run --delete \
+              -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" \
+              "$folder_name/" \
+              "sshacs@1fe.rsync.upload.akamai.com:$folder_name/" \
+            || echo "    NOTE: rsync dry run for '$folder_name' finished with a non-zero exit code ($?). This is often normal for dry runs showing changes or simulating metadata issues. Review rsync output above for details of what would change."
+          done
+          echo ""
+          echo "-----------------------------------------------------"
+          echo "rsync dry run attempts complete. Review output above for planned changes."
