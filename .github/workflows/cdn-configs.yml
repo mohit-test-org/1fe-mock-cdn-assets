@@ -10,9 +10,6 @@ on:
       # If FOLDERS_TO_SYNC changes, we need to update these to match
       - 'integration/**' 
       - 'production/**'
-  pull_request: 
-    branches:
-      - main  
 
 jobs:
   upload-and-purge:
