@@ -56,10 +56,11 @@ jobs:
         env:
           FOLDERS_TO_SYNC: "integration production" 
         run: |
+          # This script will attempt to sync all folders and continue even if rsync reports errors.
           echo "Starting sync for folders: $FOLDERS_TO_SYNC to Akamai NetStorage..."
 
           for folder_name in $FOLDERS_TO_SYNC; do
-            # Check if the local source directory exists to prevent rsync errors
+            # Check if the local source directory exists
             if [ ! -d "$folder_name" ]; then
               echo "WARNING: Local source directory '$folder_name' not found. Skipping sync for this folder."
               continue 
@@ -69,9 +70,11 @@ jobs:
             rsync -avv --delete \
               -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" \
               "$folder_name/" \
-              "sshacs@1fe.rsync.upload.akamai.com:$folder_name/"
+              "sshacs@1fe.rsync.upload.akamai.com:$folder_name/" \
+            || echo "WARNING: rsync for '$folder_name' finished with a non-zero exit code ($?). The workflow continued, but please check rsync logs above for any errors (e.g., 'failed to set times', or more critical issues)."
+            # The '|| echo ...' ensures that even if rsync fails (non-zero exit), 
           done
-          echo "Sync to NetStorage complete for specified folders."
+          echo "Sync to NetStorage attempts complete for all specified folders. Review logs for any rsync warnings or errors."
 
       - name: Purge Akamai Cache by Cache Tag
         run: |
