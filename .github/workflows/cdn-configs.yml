@@ -8,13 +8,18 @@ on:
     branches:
       - main
     paths:
-      # Only changes made to the files in the specified folders will trigger the push workflow
-      # If FOLDERS_TO_SYNC changes, we need to update these to match
+      # IMPORTANT: If FOLDERS_TO_SYNC (defined in jobs) changes, update these paths to match!
       - 'integration/**' 
       - 'production/**'
   pull_request: 
     branches:
       - main
+
+# Ensures only the latest workflow run for a specific branch or PR proceeds, canceling older runs.
+# This prevents conflicting deployments to 'main' and keeps PR checks efficient for the newest code.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # This job handles the actual deployment and purge for pushes to 'main'
@@ -59,14 +64,12 @@ jobs:
 
       - name: Sync Specified Folders to NetStorage
         env:
+          # IMPORTANT: If these folders change, update the 'on.push.paths' and 'on.pull_request.paths' triggers accordingly!
           FOLDERS_TO_SYNC: "integration production" 
         run: |
-          # This script will attempt to sync all folders and log a warning if rsync has a non-zero exit,
-          # but the step itself will continue and complete.
           echo "Starting sync for folders: $FOLDERS_TO_SYNC to Akamai NetStorage..."
 
           for folder_name in $FOLDERS_TO_SYNC; do
-            # Check if the local source directory exists
             if [ ! -d "$folder_name" ]; then
               echo "WARNING: Local source directory '$folder_name' not found. Skipping sync for this folder."
               continue 
@@ -87,7 +90,18 @@ jobs:
           echo "Purging Akamai cache for tag '1fe'..."
           akamai purge invalidate --tag 1fe
 
-  # This new job provides a dry-run preview for Pull Requests
+      - name: Securely Remove SSH Key
+        if: always() # Ensures this step runs even if previous steps fail
+        run: |
+          echo "Removing SSH private key from runner..."
+          if [ -f "$HOME/key.pem" ]; then
+            shred -u $HOME/key.pem || rm -f $HOME/key.pem # Try shred, fall back to rm for robustness
+            echo "SSH key removed."
+          else
+            echo "SSH key file not found, no removal needed."
+          fi
+
+  # This job provides a dry-run preview for Pull Requests
   pr-sync-dry-run:
     if: github.event_name == 'pull_request' 
     name: PR Sync Dry Run Check
@@ -98,7 +112,7 @@ jobs:
 
       - name: Install rsync and Prepare SSH Key for Dry Run
         run: |
-          set -e # Setup steps should be strict
+          set -e
           echo "Installing rsync..."
           sudo apt-get update -q
           sudo apt-get install -y -q rsync
@@ -111,15 +125,15 @@ jobs:
 
       - name: View Planned Changes with Rsync Dry Run
         env:
+          # IMPORTANT: If these folders change, update the 'on.pull_request.paths' trigger accordingly!
           FOLDERS_TO_SYNC: "integration production" 
         run: |
-          # This script will attempt dry-run for all folders and continue even if rsync reports non-zero exit codes.
           echo "Performing rsync dry run for folders: $FOLDERS_TO_SYNC"
           echo "This will list files that WOULD be synced/deleted if this PR were merged, focusing on content changes."
           echo "No actual changes will be made to the remote server."
           
           for folder_name in $FOLDERS_TO_SYNC; do
-            echo # Blank line for readability
+            echo 
             echo "-----------------------------------------------------"
             echo "  Dry Run for '$folder_name/'..."
             echo "-----------------------------------------------------"
@@ -138,3 +152,14 @@ jobs:
           echo ""
           echo "-----------------------------------------------------"
           echo "rsync dry run attempts complete. Review output above for planned changes."
+
+      - name: Securely Remove SSH Key
+        if: always() # Ensures this step runs even if previous steps fail
+        run: |
+          echo "Removing SSH private key from runner..."
+          if [ -f "$HOME/key.pem" ]; then
+            shred -u $HOME/key.pem || rm -f $HOME/key.pem # Try shred, fall back to rm for robustness
+            echo "SSH key removed."
+          else
+            echo "SSH key file not found, no removal needed."
+          fi
