@@ -20,7 +20,7 @@ jobs:
   # This job handles the actual deployment and purge for pushes to 'main'
   upload-and-purge:
     if: github.event_name == 'push'
-    name: Upload to NetStorage and Purge Cache =
+    name: Upload to NetStorage and Purge Cache
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
