@@ -13,7 +13,7 @@
 
 /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 
-/*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */
+/*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */
 
 /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 
@@ -67,10 +67,10 @@
  */
 
 /**! 
- * hotkeys-js v3.13.9 
+ * hotkeys-js v3.13.10 
  * A simple micro-library for defining and dispatching keyboard shortcuts. It has no dependencies. 
  * 
- * Copyright (c) 2024 kenny wong <wowohoo@qq.com> 
+ * Copyright (c) 2025 kenny wong <wowohoo@qq.com> 
  * https://github.com/jaywcjlove/hotkeys-js.git 
  * 
  * @website: https://jaywcjlove.github.io/hotkeys-js
