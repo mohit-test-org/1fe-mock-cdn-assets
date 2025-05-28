@@ -56,7 +56,6 @@ jobs:
         env:
           FOLDERS_TO_SYNC: "integration production" 
         run: |
-          set -e
           echo "Starting sync for folders: $FOLDERS_TO_SYNC to Akamai NetStorage..."
 
           for folder_name in $FOLDERS_TO_SYNC; do
