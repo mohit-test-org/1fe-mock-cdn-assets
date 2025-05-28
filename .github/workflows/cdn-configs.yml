@@ -118,7 +118,7 @@ jobs:
         run: |
           # This script will attempt dry-run for all folders and continue even if rsync reports non-zero exit codes.
           echo "Performing rsync dry run for folders: $FOLDERS_TO_SYNC"
-          echo "This will list files that WOULD be synced/deleted if this PR were merged."
+          echo "This will list files that WOULD be synced/deleted if this PR were merged, focusing on content changes."
           echo "No actual changes will be made to the remote server."
           
           for folder_name in $FOLDERS_TO_SYNC; do
@@ -132,12 +132,11 @@ jobs:
               continue 
             fi
             
-            # Using -avv for verbose rsync output, consistent with the deploy job
-            rsync -avv --dry-run --delete \
+            rsync -avvc --dry-run --delete \
               -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" \
               "$folder_name/" \
               "sshacs@1fe.rsync.upload.akamai.com:$folder_name/" \
-            || echo "    NOTE: rsync dry run for '$folder_name' finished with a non-zero exit code ($?). This is often normal for dry runs showing changes or simulating metadata issues. Review rsync output above for details of what would change."
+            || echo "    NOTE: rsync dry run for '$folder_name' finished with a non-zero exit code ($?). This can be normal for dry runs showing potential changes (especially with --delete) or if it simulates metadata issues. Review rsync output above for details of what would change."
           done
           echo ""
           echo "-----------------------------------------------------"
