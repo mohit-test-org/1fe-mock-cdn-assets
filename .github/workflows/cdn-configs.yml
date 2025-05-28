@@ -10,7 +10,7 @@ on:
       # If FOLDERS_TO_SYNC changes, we need to update these to match
       - 'integration/**' 
       - 'production/**'
-  pull_request:
+  pull_request: 
     branches:
       - main  
 
@@ -22,35 +22,43 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Tools and Prepare Credentials
+      - name: Install Akamai CLI and Purge Module
         run: |
           set -e
-          
-          # Akamai CLI and Purge Module
           echo "Installing Akamai CLI and Purge module..."
           curl -sL https://github.com/akamai/cli/releases/download/v2.0.0/akamai-v2.0.0-linuxamd64 -o akamai
           chmod +x akamai
           sudo mv akamai /usr/local/bin/
-          akamai install purge # Only installing purge module
-          
-          # Akamai API Credentials for Purge (needed for .edgerc)
+          akamai install purge 
+          echo "Akamai CLI and Purge module installed."
+
+      - name: Create Akamai .edgerc File for Purge
+        run: |
+          set -e
           echo "Creating .edgerc for Akamai API access..."
           echo "[ccu]
           client_secret = ${{ secrets.AKAMAI_API_CLIENT_SECRET }}
           host = ${{ secrets.AKAMAI_API_CLIENT_HOST }}
           access_token = ${{ secrets.AKAMAI_API_CLIENT_ACCESS_TOKEN }}
           client_token = ${{ secrets.AKAMAI_API_CLIENT_CLIENT_TOKEN }}" > ~/.edgerc
+          echo ".edgerc file created."
 
-          # Install rsync
+      - name: Install rsync for directory syncing
+        run: |
+          set -e
           echo "Installing rsync..."
           sudo apt-get update -q
           sudo apt-get install -y -q rsync
+          rsync --version # Verify installation
+          echo "rsync installed."
           
-          # Prepare SSH key for rsync
+      - name: Prepare SSH Key for rsync
+        run: |
+          set -e
           echo "Setting up SSH key for rsync..."
           echo "${{ secrets.AKAMAI_NS_SSH_PRIVATE_KEY }}" > $HOME/key.pem
           chmod 600 $HOME/key.pem
-          echo "Tool setup and credential preparation complete."
+          echo "SSH key for rsync is ready."
 
       - name: Sync Specified Folders to NetStorage
         env:
