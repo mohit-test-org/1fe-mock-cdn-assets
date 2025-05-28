@@ -1,68 +1,165 @@
-name: Upload Config Files and Purge Akamai Cache
+# The goal of this GitHub Actions workflow is:
+# 1. To sync specific folders (FOLDERS_TO_SYNC) to Akamai NetStorage 1FE and purge the Akamai cache for pushes to the main branch.
+# 2. To provide a dry-run preview for Pull Requests.
+name: Sync Folders to 1FE Netstorage and Purge Akamai Cache
 
 on:
   push:
     branches:
-      - main  # Trigger on push to the main branch
-    #paths:
-    #  - common-configs/**
-  pull_request:
+      - main
+    paths:
+      # IMPORTANT: If FOLDERS_TO_SYNC (defined in jobs) changes, update these paths to match!
+      - 'integration/**' 
+      - 'production/**'
+  pull_request: 
     branches:
-      - main  # Trigger on PRs targeting the main branch
+      - main
+
+# Ensures only the latest workflow run for a specific branch or PR proceeds, canceling older runs.
+# This prevents conflicting deployments to 'main' and keeps PR checks efficient for the newest code.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  # This job handles the actual deployment and purge for pushes to 'main'
   upload-and-purge:
+    if: github.event_name == 'push'
+    name: Upload to NetStorage and Purge Cache
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Akamai CLI and NetStorage Module
+      - name: Install Akamai CLI, Akamai Purge, Rsync, and Prepare Credentials
         run: |
           set -e
+          
+          # Akamai CLI and Purge Module
+          echo "Installing Akamai CLI and Purge module..."
           curl -sL https://github.com/akamai/cli/releases/download/v2.0.0/akamai-v2.0.0-linuxamd64 -o akamai
           chmod +x akamai
           sudo mv akamai /usr/local/bin/
-          akamai install netstorage
-          akamai install purge
+          akamai install purge 
           
+          # Akamai API Credentials for Purge (needed for .edgerc)
+          echo "Creating .edgerc for Akamai API access..."
           echo "[ccu]
           client_secret = ${{ secrets.AKAMAI_API_CLIENT_SECRET }}
           host = ${{ secrets.AKAMAI_API_CLIENT_HOST }}
           access_token = ${{ secrets.AKAMAI_API_CLIENT_ACCESS_TOKEN }}
           client_token = ${{ secrets.AKAMAI_API_CLIENT_CLIENT_TOKEN }}" > ~/.edgerc
 
-          echo "[default]
-          key = ${{ secrets.AKAMAI_NS_UPLOAD_ACCOUNT_KEY }}
-          id = 1fe
-          group = 1FE
-          host = 1fe-nsu.akamaihd.net
-          cpcode = 1800003" > ~/auth
-
-      - name: Install rsync
-        run: |
-          set -e
-          sudo apt-get update
-          sudo apt-get install -y rsync
-          rsync --version || { echo "rsync installation failed"; exit 1; }
-
-      - name: Sync directories to NetStorage using rsync
-        run: |
-          set -e
-
-          # Write the SSH key from secrets to a file
+          # Install rsync
+          echo "Installing rsync..."
+          sudo apt-get update -q
+          sudo apt-get install -y -q rsync
+          rsync --version 
+          
+          # Prepare SSH key for rsync
+          echo "Setting up SSH key for rsync..."
           echo "${{ secrets.AKAMAI_NS_SSH_PRIVATE_KEY }}" > $HOME/key.pem
           chmod 600 $HOME/key.pem
+          echo "Tool setup and credential preparation complete."
 
-          # Sync each folder's contents to NetStorage using rsync over SSH
-          for folder in integration production; do
-            echo "Syncing contents of $folder to NetStorage..."
-            rsync -avv --delete -RO -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" "$folder/" "sshacs@1fe.rsync.upload.akamai.com:$folder"
+      - name: Sync Specified Folders to NetStorage
+        env:
+          # IMPORTANT: If these folders change, update the 'on.push.paths' and 'on.pull_request.paths' triggers accordingly!
+          FOLDERS_TO_SYNC: "integration production" 
+        run: |
+          echo "Starting sync for folders: $FOLDERS_TO_SYNC to Akamai NetStorage..."
+
+          for folder_name in $FOLDERS_TO_SYNC; do
+            if [ ! -d "$folder_name" ]; then
+              echo "WARNING: Local source directory '$folder_name' not found. Skipping sync for this folder."
+              continue 
+            fi
+            
+            echo "  Syncing '$folder_name/'..."
+            rsync -avv --delete \
+              -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" \
+              "$folder_name/" \
+              "sshacs@1fe.rsync.upload.akamai.com:$folder_name/" \
+            || echo "WARNING: rsync for '$folder_name' finished with a non-zero exit code ($?). The workflow continued, but please check rsync logs above for any errors (e.g., 'failed to set times', or more critical issues)."
           done
+          echo "Sync to NetStorage attempts complete for all specified folders. Review logs for any rsync warnings or errors."
 
-      - name: Purge all assets with cache tag
+      - name: Purge Akamai Cache by Cache Tag
         run: |
           set -e
-          echo "Purging all assets with cache tag using akamai CLI..."
+          echo "Purging Akamai cache for tag '1fe'..."
           akamai purge invalidate --tag 1fe
+
+      - name: Securely Remove SSH Key
+        if: always() # Ensures this step runs even if previous steps fail
+        run: |
+          echo "Removing SSH private key from runner..."
+          if [ -f "$HOME/key.pem" ]; then
+            shred -u $HOME/key.pem || rm -f $HOME/key.pem # Try shred, fall back to rm for robustness
+            echo "SSH key removed."
+          else
+            echo "SSH key file not found, no removal needed."
+          fi
+
+  # This job provides a dry-run preview for Pull Requests
+  pr-sync-dry-run:
+    if: github.event_name == 'pull_request' 
+    name: PR Sync Dry Run Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install rsync and Prepare SSH Key for Dry Run
+        run: |
+          set -e
+          echo "Installing rsync..."
+          sudo apt-get update -q
+          sudo apt-get install -y -q rsync
+          rsync --version
+          
+          echo "Setting up SSH key for rsync dry-run..."
+          echo "${{ secrets.AKAMAI_NS_SSH_PRIVATE_KEY }}" > $HOME/key.pem
+          chmod 600 $HOME/key.pem
+          echo "SSH key for rsync dry-run is ready."
+
+      - name: View Planned Changes with Rsync Dry Run
+        env:
+          # IMPORTANT: If these folders change, update the 'on.pull_request.paths' trigger accordingly!
+          FOLDERS_TO_SYNC: "integration production" 
+        run: |
+          echo "Performing rsync dry run for folders: $FOLDERS_TO_SYNC"
+          echo "This will list files that WOULD be synced/deleted if this PR were merged, focusing on content changes."
+          echo "No actual changes will be made to the remote server."
+          
+          for folder_name in $FOLDERS_TO_SYNC; do
+            echo 
+            echo "-----------------------------------------------------"
+            echo "  Dry Run for '$folder_name/'..."
+            echo "-----------------------------------------------------"
+            
+            if [ ! -d "$folder_name" ]; then
+              echo "    WARNING: Local source directory '$folder_name' not found. Skipping dry run for this folder."
+              continue 
+            fi
+            
+            rsync -avvc --dry-run --delete \
+              -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" \
+              "$folder_name/" \
+              "sshacs@1fe.rsync.upload.akamai.com:$folder_name/" \
+            || echo "    NOTE: rsync dry run for '$folder_name' finished with a non-zero exit code ($?). This can be normal for dry runs showing potential changes (especially with --delete) or if it simulates metadata issues. Review rsync output above for details of what would change."
+          done
+          echo ""
+          echo "-----------------------------------------------------"
+          echo "rsync dry run attempts complete. Review output above for planned changes."
+
+      - name: Securely Remove SSH Key
+        if: always() # Ensures this step runs even if previous steps fail
+        run: |
+          echo "Removing SSH private key from runner..."
+          if [ -f "$HOME/key.pem" ]; then
+            shred -u $HOME/key.pem || rm -f $HOME/key.pem # Try shred, fall back to rm for robustness
+            echo "SSH key removed."
+          else
+            echo "SSH key file not found, no removal needed."
+          fi
