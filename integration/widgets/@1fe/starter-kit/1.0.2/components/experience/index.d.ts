@@ -1,4 +1,3 @@
-/** @jsxImportSource @emotion/react */
 /**
  * Experience Utility examples
  */
