@@ -1,18 +1,18 @@
 [
-    {
-        "widgetId": "@1fe/bathtub",
-        "version": "1.0.0"
-    },
-    {
-        "widgetId": "@1fe/starter-kit",
-        "version": "1.0.2"
-    },
-    {
-        "widgetId": "@1fe/starter-kit2",
-        "version": "1.0.5"
-    },
-    {
-        "widgetId": "@1fe/authed-widget",
-        "version": "1.0.0"
-    }
+  {
+    "widgetId": "@1fe/bathtub",
+    "version": "1.0.0"
+  },
+  {
+    "widgetId": "@1fe/starter-kit",
+    "version": "1.0.2"
+  },
+  {
+    "widgetId": "@1fe/starter-kit2",
+    "version": "1.0.5"
+  },
+  {
+    "widgetId": "@1fe/authed-widget",
+    "version": "1.0.0"
+  }
 ]

@@ -1,43 +1,43 @@
 [
-    { "id": "@1fe/cli", "version": "1.13.4", "type": "installed" },
-    {
-        "id": "react-dom",
-        "name": "ReactDOM",
-        "version": "17.0.2",
-        "isPreloaded": true,
-        "path": "umd/react-dom.development.js",
-        "type": "external"
-    },
-    {
-        "id": "react",
-        "name": "React",
-        "version": "17.0.2",
-        "isPreloaded": true,
-        "path": "umd/react.development.js",
-        "type": "external"
-    },
-    {
-        "id": "react-router-dom",
-        "name": "ReactRouterDOM",
-        "version": "6.30.0",
-        "isPreloaded": true,
-        "path": "umd/react-router-dom.development.js",
-        "type": "external"
-    },
-    {
-        "id": "react-router",
-        "name": "ReactRouter",
-        "version": "6.30.0",
-        "isPreloaded": true,
-        "path": "umd/react-router.development.js",
-        "type": "external"
-    },
-    {
-        "id": "@remix-run/router",
-        "name": "RemixRouter",
-        "version": "1.23.0",
-        "isPreloaded": true,
-        "path": "dist/router.umd.js",
-        "type": "external"
-    }
+  { "id": "@1fe/cli", "version": "1.13.4", "type": "installed" },
+  {
+    "id": "react-dom",
+    "name": "ReactDOM",
+    "version": "17.0.2",
+    "isPreloaded": true,
+    "path": "umd/react-dom.development.js",
+    "type": "external"
+  },
+  {
+    "id": "react",
+    "name": "React",
+    "version": "17.0.2",
+    "isPreloaded": true,
+    "path": "umd/react.development.js",
+    "type": "external"
+  },
+  {
+    "id": "react-router-dom",
+    "name": "ReactRouterDOM",
+    "version": "6.30.0",
+    "isPreloaded": true,
+    "path": "umd/react-router-dom.development.js",
+    "type": "external"
+  },
+  {
+    "id": "react-router",
+    "name": "ReactRouter",
+    "version": "6.30.0",
+    "isPreloaded": true,
+    "path": "umd/react-router.development.js",
+    "type": "external"
+  },
+  {
+    "id": "@remix-run/router",
+    "name": "RemixRouter",
+    "version": "1.23.0",
+    "isPreloaded": true,
+    "path": "dist/router.umd.js",
+    "type": "external"
+  }
 ]
