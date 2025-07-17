@@ -3,7 +3,7 @@
   {
     "id": "react-dom",
     "name": "ReactDOM",
-    "version": "17.0.2",
+    "version": "18.3.1",
     "isPreloaded": true,
     "path": "umd/react-dom.development.js",
     "type": "external"
@@ -11,7 +11,7 @@
   {
     "id": "react",
     "name": "React",
-    "version": "17.0.2",
+    "version": "18.3.1",
     "isPreloaded": true,
     "path": "umd/react.development.js",
     "type": "external"
