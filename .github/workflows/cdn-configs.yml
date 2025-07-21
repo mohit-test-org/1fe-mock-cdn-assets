@@ -117,6 +117,10 @@ jobs:
 
               echo "  Syncing '$local_path/' to '$remote_path/'..."
               
+              echo "    Working directory before rsync: $(pwd)"
+              echo "    Full local path: $(realpath "$local_path")"
+              echo "    Rsync command: rsync -avv --delete -e \"ssh -o StrictHostKeyChecking=no -i $HOME/key.pem\" \"$local_path/\" \"sshacs@1fe.rsync.upload.akamai.com:$remote_path/\""
+              
               # Create remote directory structure if it doesn't exist
               ssh -o StrictHostKeyChecking=no -i $HOME/key.pem \
                 "sshacs@1fe.rsync.upload.akamai.com" \
@@ -231,7 +235,15 @@ jobs:
               
               echo "    Dry run for '$local_path/' -> '$remote_path/'..."
               
-              rsync -avvc --dry-run --delete \
+              echo "      Working directory before rsync: $(pwd)"
+              echo "      Full local path: $(realpath "$local_path")"
+              echo "      Rsync command: rsync -avvc --dry-run --delete -e \"ssh -o StrictHostKeyChecking=no -i $HOME/key.pem\" \"$local_path/\" \"sshacs@1fe.rsync.upload.akamai.com:$remote_path/\""
+              
+              # Test what files rsync would include locally
+              echo "      Testing local rsync file inclusion:"
+              rsync -avvn "$local_path/" /tmp/test_rsync_target/ 2>&1 | head -20 || true
+              
+              rsync -avvc --dry-run --delete --itemize-changes \
                 -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" \
                 "$local_path/" \
                 "sshacs@1fe.rsync.upload.akamai.com:$remote_path/" \
