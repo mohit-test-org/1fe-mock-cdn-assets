@@ -68,6 +68,9 @@ jobs:
           ENVIRONMENTS_TO_SYNC: 'integration production'
         run: |
           echo "Starting selective folder sync to Akamai NetStorage..."
+          echo "Current working directory: $(pwd)"
+          echo "Directory listing:"
+          ls -la
 
           for env_name in $ENVIRONMENTS_TO_SYNC; do
             echo "Processing environment: $env_name"
@@ -76,6 +79,9 @@ jobs:
               echo "WARNING: Environment directory '$env_name' not found. Skipping."
               continue 
             fi
+
+            echo "  Contents of '$env_name/':"
+            ls -la "$env_name/"
             
             # Automatically discover all subdirectories in this environment
             subdirs=$(find "$env_name" -maxdepth 1 -type d -not -path "$env_name" -printf '%f\n' 2>/dev/null | sort)
@@ -91,7 +97,24 @@ jobs:
             for subdir in $subdirs; do
               local_path="$env_name/$subdir"
               remote_path="$env_name/$subdir"
+
+              echo "  Checking '$local_path/'..."
+              if [ ! -d "$local_path" ]; then
+                echo "    ERROR: Local directory '$local_path' does not exist!"
+                continue
+              fi
               
+              echo "    Contents of '$local_path/':"
+              ls -la "$local_path/"
+              
+              file_count=$(find "$local_path" -type f | wc -l)
+              echo "    Found $file_count files in '$local_path/'"
+              
+              if [ "$file_count" -eq 0 ]; then
+                echo "    WARNING: No files found in '$local_path/'. Skipping sync."
+                continue
+              fi
+
               echo "  Syncing '$local_path/' to '$remote_path/'..."
               
               # Create remote directory structure if it doesn't exist
@@ -156,6 +179,9 @@ jobs:
           echo "Performing rsync dry run for selective folder sync"
           echo "This will list files that WOULD be synced/deleted if this PR were merged."
           echo "No actual changes will be made to the remote server."
+          echo "Current working directory: $(pwd)"
+          echo "Directory listing:"
+          ls -la
 
           for env_name in $ENVIRONMENTS_TO_SYNC; do
             echo 
@@ -167,6 +193,9 @@ jobs:
               echo "    WARNING: Environment directory '$env_name' not found. Skipping."
               continue 
             fi
+            
+            echo "    Contents of '$env_name/':"
+            ls -la "$env_name/"
             
             # Automatically discover all subdirectories in this environment
             subdirs=$(find "$env_name" -maxdepth 1 -type d -not -path "$env_name" -printf '%f\n' 2>/dev/null | sort)
@@ -182,6 +211,23 @@ jobs:
             for subdir in $subdirs; do
               local_path="$env_name/$subdir"
               remote_path="$env_name/$subdir"
+              
+              echo "    Checking '$local_path/'..."
+              if [ ! -d "$local_path" ]; then
+                echo "      ERROR: Local directory '$local_path' does not exist!"
+                continue
+              fi
+              
+              echo "      Contents of '$local_path/':"
+              ls -la "$local_path/"
+              
+              file_count=$(find "$local_path" -type f | wc -l)
+              echo "      Found $file_count files in '$local_path/'"
+              
+              if [ "$file_count" -eq 0 ]; then
+                echo "      WARNING: No files found in '$local_path/'. Skipping dry-run."
+                continue
+              fi
               
               echo "    Dry run for '$local_path/' -> '$remote_path/'..."
               
