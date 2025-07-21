@@ -68,9 +68,6 @@ jobs:
           ENVIRONMENTS_TO_SYNC: 'integration production'
         run: |
           echo "Starting selective folder sync to Akamai NetStorage..."
-          echo "Current working directory: $(pwd)"
-          echo "Directory listing:"
-          ls -la
 
           for env_name in $ENVIRONMENTS_TO_SYNC; do
             echo "Processing environment: $env_name"
@@ -79,9 +76,6 @@ jobs:
               echo "WARNING: Environment directory '$env_name' not found. Skipping."
               continue 
             fi
-
-            echo "  Contents of '$env_name/':"
-            ls -la "$env_name/"
             
             # Automatically discover all subdirectories in this environment
             subdirs=$(find "$env_name" -maxdepth 1 -type d -not -path "$env_name" -printf '%f\n' 2>/dev/null | sort)
@@ -91,35 +85,20 @@ jobs:
               continue
             fi
             
-            echo "  Found subdirectories in '$env_name/': $(echo $subdirs | tr '\n' ' ')"
+            echo "  Found subdirectories: $(echo $subdirs | tr '\n' ' ')"
             
             # Process each discovered subdirectory
             for subdir in $subdirs; do
               local_path="$env_name/$subdir"
               remote_path="$env_name/$subdir"
-
-              echo "  Checking '$local_path/'..."
-              if [ ! -d "$local_path" ]; then
-                echo "    ERROR: Local directory '$local_path' does not exist!"
-                continue
-              fi
-              
-              echo "    Contents of '$local_path/':"
-              ls -la "$local_path/"
               
               file_count=$(find "$local_path" -type f | wc -l)
-              echo "    Found $file_count files in '$local_path/'"
-              
               if [ "$file_count" -eq 0 ]; then
-                echo "    WARNING: No files found in '$local_path/'. Skipping sync."
+                echo "  WARNING: No files found in '$local_path/'. Skipping sync."
                 continue
               fi
-
-              echo "  Syncing '$local_path/' to '$remote_path/'..."
               
-              echo "    Working directory before rsync: $(pwd)"
-              echo "    Full local path: $(realpath "$local_path")"
-              echo "    Rsync command: rsync -avv --delete -e \"ssh -o StrictHostKeyChecking=no -i $HOME/key.pem\" \"$local_path/\" \"sshacs@1fe.rsync.upload.akamai.com:$remote_path/\""
+              echo "  Syncing '$local_path/' ($file_count files)..."
               
               # Create remote directory structure if it doesn't exist
               ssh -o StrictHostKeyChecking=no -i $HOME/key.pem \
@@ -134,7 +113,7 @@ jobs:
               || echo "    WARNING: rsync for '$local_path' finished with a non-zero exit code ($?). Please check rsync logs above."
             done
           done
-          echo "Selective folder sync attempts complete. Review logs for any rsync warnings or errors."
+          echo "Selective folder sync complete."
 
       - name: Purge Akamai Cache by Cache Tag
         run: |
@@ -183,9 +162,6 @@ jobs:
           echo "Performing rsync dry run for selective folder sync"
           echo "This will list files that WOULD be synced/deleted if this PR were merged."
           echo "No actual changes will be made to the remote server."
-          echo "Current working directory: $(pwd)"
-          echo "Directory listing:"
-          ls -la
 
           for env_name in $ENVIRONMENTS_TO_SYNC; do
             echo 
@@ -198,9 +174,6 @@ jobs:
               continue 
             fi
             
-            echo "    Contents of '$env_name/':"
-            ls -la "$env_name/"
-            
             # Automatically discover all subdirectories in this environment
             subdirs=$(find "$env_name" -maxdepth 1 -type d -not -path "$env_name" -printf '%f\n' 2>/dev/null | sort)
             
@@ -209,41 +182,22 @@ jobs:
               continue
             fi
             
-            echo "    Found subdirectories in '$env_name/': $(echo $subdirs | tr '\n' ' ')"
+            echo "    Found subdirectories: $(echo $subdirs | tr '\n' ' ')"
             
             # Process each discovered subdirectory
             for subdir in $subdirs; do
               local_path="$env_name/$subdir"
               remote_path="$env_name/$subdir"
               
-              echo "    Checking '$local_path/'..."
-              if [ ! -d "$local_path" ]; then
-                echo "      ERROR: Local directory '$local_path' does not exist!"
-                continue
-              fi
-              
-              echo "      Contents of '$local_path/':"
-              ls -la "$local_path/"
-              
               file_count=$(find "$local_path" -type f | wc -l)
-              echo "      Found $file_count files in '$local_path/'"
-              
               if [ "$file_count" -eq 0 ]; then
                 echo "      WARNING: No files found in '$local_path/'. Skipping dry-run."
                 continue
               fi
               
-              echo "    Dry run for '$local_path/' -> '$remote_path/'..."
+              echo "    Dry run for '$local_path/' ($file_count files)..."
               
-              echo "      Working directory before rsync: $(pwd)"
-              echo "      Full local path: $(realpath "$local_path")"
-              echo "      Rsync command: rsync -avvc --dry-run --delete -e \"ssh -o StrictHostKeyChecking=no -i $HOME/key.pem\" \"$local_path/\" \"sshacs@1fe.rsync.upload.akamai.com:$remote_path/\""
-              
-              # Test what files rsync would include locally
-              echo "      Testing local rsync file inclusion:"
-              rsync -avvn "$local_path/" /tmp/test_rsync_target/ 2>&1 | head -20 || true
-              
-              rsync -avvc --dry-run --delete --itemize-changes \
+              rsync -avvc --dry-run --delete \
                 -e "ssh -o StrictHostKeyChecking=no -i $HOME/key.pem" \
                 "$local_path/" \
                 "sshacs@1fe.rsync.upload.akamai.com:$remote_path/" \
