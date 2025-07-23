@@ -19,23 +19,6 @@
           "enabled": true,
           "route": "/widget-starter-kit"
         }
-      },
-      {
-        "widgetId": "@1fe/sample-widget",
-        "plugin": {
-          "enabled": true,
-          "route": "/sample-widget"
-        }
-      },
-      {
-        "widgetId": "@1fe/sample-widget-with-auth",
-        "plugin": {
-          "enabled": true,
-          "route": "/sample-widget-with-auth",
-          "auth": {
-            "authenticationType": "required"
-          }
-        }
       }
     ]
   },
