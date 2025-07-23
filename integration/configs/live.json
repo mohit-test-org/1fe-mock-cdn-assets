@@ -14,24 +14,24 @@
         }
       },
       {
-        "widgetId": "@1fe/starter-kit",
+        "widgetId": "@1fe/widget-starter-kit",
         "plugin": {
           "enabled": true,
-          "route": "/app1"
+          "route": "/widget-starter-kit"
         }
       },
       {
-        "widgetId": "@1fe/starter-kit2",
+        "widgetId": "@1fe/sample-widget",
         "plugin": {
           "enabled": true,
-          "route": "/app2"
+          "route": "/sample-widget"
         }
       },
       {
-        "widgetId": "@1fe/authed-widget",
+        "widgetId": "@1fe/sample-widget-with-auth",
         "plugin": {
           "enabled": true,
-          "route": "/authed-widget",
+          "route": "/sample-widget-with-auth",
           "auth": {
             "authenticationType": "required"
           }
@@ -47,8 +47,18 @@
       }
     },
     "browserslistConfig": {
-      "buildTarget": ["defaults", "not dead", "edge>=19", "unreleased versions"],
-      "unsupportedBrowserScreen": ["defaults", "not dead", "edge>=19", "unreleased versions"]
+      "buildTarget": [
+        "defaults",
+        "not dead",
+        "edge>=19",
+        "unreleased versions"
+      ],
+      "unsupportedBrowserScreen": [
+        "defaults",
+        "not dead",
+        "edge>=19",
+        "unreleased versions"
+      ]
     }
   }
 }
