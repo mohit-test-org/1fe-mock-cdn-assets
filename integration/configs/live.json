@@ -1,9 +1,9 @@
 {
   "libraries": {
-    "basePrefix": "https://1fe-a.akamaihd.net/integration/libs/"
+    "basePrefix": "https://cdn.jsdelivr.net/gh/mohit-test-org/1fe-mock-cdn-assets@v1.0.2/integration/libs/"
   },
   "widgets": {
-    "basePrefix": "https://1fe-a.akamaihd.net/integration/widgets/",
+    "basePrefix": "https://cdn.jsdelivr.net/gh/mohit-test-org/1fe-mock-cdn-assets@v1.0.2/integration/widgets/",
     "configs": [
       {
         "widgetId": "@1fe/bathtub",
